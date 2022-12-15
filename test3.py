@@ -122,6 +122,17 @@ prompts = ['a beautiful painting of a peaceful lake in the Land of the Dreams, f
            "atmospheric perspective, altostratus clouds,, cinematic, 1000mm lens, anamorphic lens flare, photographic, "
            "octane render, cinematography by roger deakins, in the style of ansel adams, low details,"]
 
+prompts = ['a painting of a tree with pink flowers, a detailed matte painting by shin yun - bok, cgsociety, photorealism, '
+           'matte painting, detailed painting, matte drawing ',
+           "Beautiful hyperrealistic detailed matte painting of a landscape of a landscape of wheat fields on which "
+           "stands a large wooden toilet with a heart cut out of lost vibes in the foreground and a dark forest in the "
+           "background during autumn, afternoon, winter, by andreas rocha and john howe, and Martin Johnson Heade, "
+           "featured on artstation, featured on behance, golden ratio, ultrawide angle, f32, well composed, cohesive"]
+
+prompts = ["beautiful mountain landscape, lake, snow, oil painting 8 k hd ",
+           "a beautiful and highly detailed matte painting of the epic mountains of avalon, intricate details, epic scale, "
+           "insanely complex, 8 k, sharp focus, hyperrealism, very realistic, by caspar friedrich, albert bierstadt, james gurney, brian froud, "]
+
 
 
 # Converting textual prompts to embedding
