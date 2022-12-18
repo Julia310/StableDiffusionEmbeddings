@@ -1,4 +1,5 @@
-from stable_diffusion import SrtableDiffusion
+from stable_diffusion import StableDiffusion
+import torch
 
 
 def main():
@@ -42,9 +43,13 @@ def main():
 
     # Converting textual prompts to embedding
 
-    ldm = SrtableDiffusion()
+    ldm = StableDiffusion()
     emb_list = ldm.get_embedding(prompts)
     emb = ldm.combine_embeddings(emb_list[0], emb_list[1], noise)
+
+    std0 = torch.std(emb_list[0])
+    std1 = torch.std(emb_list[1])
+    std2 = torch.std(emb)
     emb_list.append(emb)
     prompts.append(f'{prompts[0][0:20]}_{prompts[1][0:20]}_{noise}')
 
