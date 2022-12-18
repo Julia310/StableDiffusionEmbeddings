@@ -6,7 +6,7 @@ import os
 from PIL import Image
 
 
-class SrtableDiffusion():
+class SrtableDiffusion:
 
     def __init__(self):
 
