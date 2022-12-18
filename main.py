@@ -1,5 +1,6 @@
 from stable_diffusion import SrtableDiffusion
 
+
 def main():
     noise = 0.5
     prompts = ['full body image of a norwegian forest cat of white and ginger fur, by dan mumford, yusuke murata and '
@@ -43,12 +44,13 @@ def main():
 
     ldm = SrtableDiffusion()
     emb_list = ldm.get_embedding(prompts)
-    emb = ldm.intermediate_embeddings(emb_list[0], emb_list[1], noise)
+    emb = ldm.combine_embeddings(emb_list[0], emb_list[1], noise)
     emb_list.append(emb)
     prompts.append(f'{prompts[0][0:20]}_{prompts[1][0:20]}_{noise}')
 
     for i in range(len(prompts)):
-        ldm.prompt_2_img(prompts[i], emb_list[i])
+        ldm.embedding_2_img(prompts[i], emb_list[i])
+
 
 if __name__ == "__main__":
     main()

@@ -4,7 +4,6 @@ from diffusers import UNet2DConditionModel, LMSDiscreteScheduler, AutoencoderKL
 from tqdm import tqdm
 import os
 from PIL import Image
-from datetime import datetime
 
 
 class SrtableDiffusion():
@@ -56,13 +55,11 @@ class SrtableDiffusion():
 
         return embedding_list
 
-    def intermediate_embeddings(aelf, embedding1, embedding2, noise):
-        latents_a = embedding1
-        latents_b = embedding2
-        return (latents_a * (1 - noise) + latents_b * noise) / (
-                torch.sqrt(torch.std(latents_a * (1 - noise)) ** 2 + torch.std(latents_b * noise) ** 2) + 1e-14)
+    def combine_embeddings(aelf, embedding1, embedding2, noise):
+        return (embedding1 * (1 - noise) + embedding2 * noise) / (
+                torch.sqrt(torch.std(embedding1 * (1 - noise)) ** 2 + torch.std(embedding2 * noise) ** 2) + 1e-14)
 
-    def prompt_2_img(self, prompt, emb, g=7.5, seed=37, steps=70, dim=512, save_int=True):
+    def embedding_2_img(self, prompt, emb, g=7.5, seed=37, steps=70, dim=512, save_int=True):
         """
         Diffusion process to convert prompt to image
         """
@@ -90,7 +87,7 @@ class SrtableDiffusion():
             # Conditioning  the latents
             latents = self.scheduler.step(pred, ts, latents).prev_sample
 
-            # Saving intermediate images
+            # Saving image
         if save_int:
             if not os.path.exists(f'./steps'):
                 os.mkdir(f'./steps')
