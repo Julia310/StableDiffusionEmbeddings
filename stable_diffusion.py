@@ -4,6 +4,7 @@ from diffusers import UNet2DConditionModel, LMSDiscreteScheduler, AutoencoderKL
 from tqdm import tqdm
 import os
 from PIL import Image
+from torchvision import transforms as tfms
 
 
 class StableDiffusion:
@@ -44,6 +45,21 @@ class StableDiffusion:
         pil_images = [Image.fromarray(image) for image in images]
         return pil_images
 
+    def pil_to_latents(self, image):
+        '''
+        Function to convert image to latents
+        '''
+        init_image = tfms.ToTensor()(image).unsqueeze(0) * 2.0 - 1.0
+        init_image = init_image.to(device="cuda", dtype=torch.float16)
+        init_latent_dist = self.vae.encode(init_image).latent_dist.sample() * 0.18215
+        return init_latent_dist
+
+    def load_image(self, p):
+        '''
+        Function to load images from a defined path
+        '''
+        return Image.open(p).convert('RGB').resize((512, 512))
+
     def get_embedding(self, prompts):
         embedding_list = list()
         for text in prompts:
@@ -55,9 +71,10 @@ class StableDiffusion:
 
         return embedding_list
 
-    def combine_embeddings(aelf, embedding1, embedding2, noise):
-        return (embedding1 * (1 - noise) + embedding2 * noise) / (
-                torch.sqrt(torch.std(embedding1 * (1 - noise)) ** 2 + torch.std(embedding2 * noise) ** 2) + 1e-14)
+    def combine_embeddings(self, embedding1, embedding2, noise):
+        return embedding1 * (1 - noise) + embedding2 * noise
+        #return (embedding1 * (1 - noise) + embedding2 * noise) / (
+                #torch.sqrt(torch.std(embedding1 * (1 - noise)) ** 2 + torch.std(embedding2 * noise) ** 2) + 1e-14)
 
     def embedding_2_img(self, prompt, emb, g=7.5, seed=37, steps=70, dim=512, save_int=True):
         """
