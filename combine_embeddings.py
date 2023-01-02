@@ -41,15 +41,15 @@ def main():
                "a beautiful and highly detailed matte painting of the epic mountains of avalon, intricate details, epic scale, "
                "insanely complex, 8 k, sharp focus, hyperrealism, very realistic, by caspar friedrich, albert bierstadt, james gurney, brian froud, "]
 
+
+    prompts = [""]
+
     # Converting textual prompts to embedding
 
     ldm = StableDiffusion()
     emb_list = ldm.get_embedding(prompts)
     emb = ldm.combine_embeddings(emb_list[0], emb_list[1], noise)
 
-    std0 = torch.std(emb_list[0])
-    std1 = torch.std(emb_list[1])
-    std2 = torch.std(emb)
     emb_list.append(emb)
     prompts.append(f'{prompts[0][0:20]}_{prompts[1][0:20]}_{noise}')
 

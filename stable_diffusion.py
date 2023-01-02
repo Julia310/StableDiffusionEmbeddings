@@ -71,12 +71,29 @@ class StableDiffusion:
 
         return embedding_list
 
-    def combine_embeddings(self, embedding1, embedding2, noise):
-        return embedding1 * (1 - noise) + embedding2 * noise
-        #return (embedding1 * (1 - noise) + embedding2 * noise) / (
-                #torch.sqrt(torch.std(embedding1 * (1 - noise)) ** 2 + torch.std(embedding2 * noise) ** 2) + 1e-14)
+    def get_cov(self, X, Y):
+        mean_X = torch.mean(X)
+        mean_Y = torch.mean(Y)
 
-    def embedding_2_img(self, prompt, emb, g=7.5, seed=37, steps=70, dim=512, save_int=True):
+        X_flat = torch.flatten(X)
+        Y_flat = torch.flatten(Y)
+
+        covariance = sum((X_flat - mean_X) * (Y_flat - mean_Y)) / (len(X_flat) - 1)
+
+        return covariance
+
+    def combine_embeddings(self, embedding1, embedding2, noise):
+        X = embedding1 * (1 - noise)
+        Y = embedding2 * noise
+
+        cov = self.get_cov(X, Y)
+
+        #return X + Y
+
+        return (X + Y) / (
+                torch.sqrt(torch.std(X) ** 2 + torch.std(Y) ** 2) + 1e-14 + 2 * cov)
+
+    def embedding_2_img(self, prompt, emb, g=7.5, seed=61582, steps=70, dim=512, save_int=True):
         """
         Diffusion process to convert prompt to image
         """
@@ -105,7 +122,9 @@ class StableDiffusion:
             latents = self.scheduler.step(pred, ts, latents).prev_sample
 
             # Saving image
+        pil_image = self.latents_to_pil(latents)[0]
         if save_int:
             if not os.path.exists(f'./steps'):
                 os.mkdir(f'./steps')
-            self.latents_to_pil(latents)[0].save(f'output/{prompt[0:45]}.jpeg')
+            pil_image.save(f'output/{prompt[0:45]}.jpeg')
+        return pil_image
