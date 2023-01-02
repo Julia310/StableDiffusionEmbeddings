@@ -69,7 +69,7 @@ def get_random_seeds(num_seeds):
 
 def write_to_csv(csv_rows, filename, file_path, seed = None):
     if not seed is None:
-        file_path = f'{file_path}{seed}/' + filename
+        file_path = f'{file_path}/{seed}/' + filename
     if os.path.exists(file_path):
         os.remove(file_path)
     with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
@@ -120,7 +120,7 @@ class Perturbations:
     def perturbate_between_prompts(self):
         seed = get_random_seeds(1)[0]
         make_dir('perturbations')
-        filename = 'perturbations.csv'
+        filename = 'output/perturbations/perturbations.csv'
         file_path = 'perturbations'
         csv_rows = [['prompt1', 'prompt2'] + list(map(lambda x: str(x), range(11)))]
         for i in range(len(self.prompt_pairs)):
