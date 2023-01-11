@@ -2,8 +2,7 @@ import random
 from stable_diffusion import StableDiffusion
 from aesthetic_predictor.simple_inference import AestheticPredictor
 import os
-import csv
-
+from utils import get_random_seeds, write_to_csv, make_dir
 
 def create_random_prompts(num_prompts):
     # Create a string of all possible characters
@@ -29,53 +28,32 @@ def create_random_prompts(num_prompts):
     return prompts
 
 
-def make_dir(seed = None):
-    if not os.path.exists(f'./output/random'):
-        os.mkdir(f'./output/random/')
-    if not seed is None:
-        if not os.path.exists(f'./output/random/{seed}'):
-            os.mkdir(f'./output/random/{seed}')
-
-
-def get_random_seeds(num_seeds):
-    seeds = list()
-    for i in range(num_seeds):
-        seeds.append(random.randint(1000, 1000000))
-    return seeds
-
-
-def write_to_csv(csv_rows):
-    file_path = './output/random/random_prompts.csv'
-    if os.path.exists(file_path):
-        os.remove(file_path)
-    with open(file_path, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quotechar='', quoting=csv.QUOTE_NONE)
-        for row in csv_rows:
-            writer.writerow(row)
-            csvfile.flush()
-
-
 def main():
     aesthetic_predictor = AestheticPredictor()
     prompts = create_random_prompts(100)
     seeds = get_random_seeds(10)
     ldm = StableDiffusion()
     emb_list = ldm.get_embedding(prompts)
-    make_dir()
-    csv_file = list()
-    csv_file.append(['prompt'] + seeds)
+    make_dir(f'../output/random')
+    csv_file_images = list()
+    csv_file_prompts = list()
+    csv_file_images.append(['prompt'] + seeds)
+    csv_file_prompts.append(['prompt, aesthetic_score'])
     for i in range(len(prompts)):
-        csw_row = list()
-        csw_row.append(prompts[i])
+        csw_row_images = list()
+        csw_row_images.append(prompts[i])
+        csw_row_prompts = [prompts[i], aesthetic_predictor.text_predict(prompts[i])]
+        emb = emb_list[i]
         for seed in seeds:
-            make_dir(seed)
-            emb = emb_list[i]
+            make_dir(f'../output/random', seed)
             pil_image = ldm.embedding_2_img(prompts[i], emb, seed=seed, save_int=False)
-            pil_image.save(f'./output/random/{seed}/{prompts[i][0:30]}.jpg')
+            #pil_image.save(f'./output/random/{seed}/{prompts[i][0:30]}.jpg')
 
-            csw_row.append(aesthetic_predictor.predict(pil_image))
-        csv_file.append(csw_row)
-        write_to_csv(csv_file)
+            csw_row_images.append(aesthetic_predictor.img_predict(pil_image))
+        csv_file_images.append(csw_row_images)
+        csv_file_prompts.append(csw_row_prompts)
+        write_to_csv(csv_file_images, 'random_prompts_images.csv', '../output/random/')
+        write_to_csv(csv_file_prompts, 'random_prompts.csv', '../output/random/')
 
 
 if __name__ == "__main__":
