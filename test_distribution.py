@@ -93,7 +93,7 @@ if __name__ == "__main__":
     for prompt in prompts:
         print('=======================================')
         print(prompt)
-        emb = ldm.get_embedding(prompts)
+        emb = ldm.get_embedding(prompt)
         emb_flat = torch.flatten(emb)
         #test_normality(emb_flat.cpu().detach().numpy(), prompt, test = 'kstest')
         #test_distributions(emb_flat.cpu().detach().numpy(), prompt, ['norm', 'logistic', 'genhyperbolic'])
