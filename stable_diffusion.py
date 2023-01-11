@@ -69,7 +69,7 @@ class StableDiffusion:
             emb = torch.cat([uncond, text_encoded])
             embedding_list.append(emb)
 
-        return embedding_list
+        return text_encoded
 
     def get_cov(self, X, Y):
         mean_X = torch.mean(X)

@@ -2,11 +2,9 @@ import torch
 from torch.distributions.normal import Normal
 from stable_diffusion import StableDiffusion
 import random
-import pandas as pd
-import requests
-import csv
 import os
 from aesthetic_predictor.simple_inference import AestheticPredictor
+from utils import get_random_seeds, write_to_csv, retrieve_prompts, make_dir
 
 
 def sample_noise(embedding):
@@ -31,17 +29,6 @@ def generate_random_integers():
     return [num1, num2]
 
 
-def retrieve_prompts():
-    url = 'https://lexica.art/api/v1/search?q=""'
-
-    s = requests.Session()
-    r = s.get(url)
-
-    df = pd.json_normalize(r.json()['images'])
-
-    return df['prompt']
-
-
 def generate_prompt_pairs():
     prompt_pairs = list()
 
@@ -50,33 +37,6 @@ def generate_prompt_pairs():
         if pair not in prompt_pairs:
             prompt_pairs.append(pair)
     return prompt_pairs
-
-
-def make_dir(directory, seed = None):
-    if not os.path.exists(f'./output/{directory}'):
-        os.mkdir(f'./output/{directory}/')
-    if not seed is None:
-        if not os.path.exists(f'./output/{directory}/{seed}'):
-            os.mkdir(f'./output/{directory}/{seed}')
-
-
-def get_random_seeds(num_seeds):
-    seeds = list()
-    for i in range(num_seeds):
-        seeds.append(random.randint(1000, 1000000))
-    return seeds
-
-
-def write_to_csv(csv_rows, filename, file_path, seed = None):
-    if not seed is None:
-        file_path = f'{file_path}/{seed}/' + filename
-    if os.path.exists(file_path):
-        os.remove(file_path)
-    with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, escapechar='\\')
-        for row in csv_rows:
-            writer.writerow(row)
-            csvfile.flush()
 
 
 class Perturbations:
@@ -114,14 +74,14 @@ class Perturbations:
     def aesthetic_prediction(self, emb_list, noise, prompt, seed):
         emb = self.ldm.combine_embeddings(emb_list[0], emb_list[1], noise)
         pil_image = self.ldm.embedding_2_img(prompt, emb, seed=seed, save_int=False)
-        aesthetic_predictor = self.aesthetic_predictor.predict(pil_image)
+        aesthetic_predictor = self.aesthetic_predictor.img_predict(pil_image)
         return emb, aesthetic_predictor, pil_image
 
     def perturbate_between_prompts(self):
         seed = get_random_seeds(1)[0]
-        make_dir('perturbations')
-        filename = 'output/perturbations/perturbations.csv'
-        file_path = 'perturbations'
+        filename = 'perturbations.csv'
+        file_path = '../output/perturbations/'
+        make_dir(file_path)
         csv_rows = [['prompt1', 'prompt2'] + list(map(lambda x: str(x), range(11)))]
         for i in range(len(self.prompt_pairs)):
             prompt1_idx = self.prompt_pairs[i][0]
@@ -132,40 +92,41 @@ class Perturbations:
         write_to_csv(csv_rows, filename, file_path)
 
     def random_perturbation(self):
-        seeds = get_random_seeds(2)
+        seeds = get_random_seeds(1)
+        #seeds = [699239, 9027454]
+        self.prompts = [self.prompts[0], self.prompts[1]]
         for seed in seeds:
-            make_dir('random_perturbations', seed)
+            make_dir('../output/random_perturbations', seed)
             csv_file = list()
             csv_file.append(['prompt'] + ["noise" + str(i) for i in range(50)])
             filename = f'{seed}.csv'
             for i in range(len(self.prompts)):
-                csv_row = list()
+                csv_row_images = list()
                 prompt = self.prompts[i]
-                csv_row.append(prompt)
+                csv_row_images.append(prompt)
                 print('========================================')
                 print(prompt)
                 emb = self.ldm.get_embedding([prompt])[0]
                 pil_image = self.ldm.embedding_2_img('0_' + prompt, emb, seed=seed, save_int=False)
                 pil_image.save(f'./output/random_perturbations/{seed}/{prompt[0:30]}_0.jpg')
-                prediction = self.aesthetic_predictor.predict(pil_image)
-                csv_row.append(prediction)
+                csv_row_images.append(self.aesthetic_predictor.img_predict(pil_image))
                 for j in range(1, 50):
                     noise = sample_noise(emb)
-                    emb, aesthetic_predictor, pil_image = self.aesthetic_prediction([emb, noise], 0.01, str(j) + '_' + prompt)
+                    emb, aesthetic_predictor, pil_image = self.aesthetic_prediction([emb, noise], 0.01, str(j) + '_' + prompt, seed)
                     pil_image.save(f'./output/random_perturbations/{seed}/{prompt[0:30]}_{j}.jpg')
-                    csv_row.append(aesthetic_predictor)
-                csv_file.append(csv_row)
-                try:
-                    file_path = './output/random_perturbations/' + filename
-                    write_to_csv(csv_file, filename, file_path, seed)
-                except:
-                    continue
+                    csv_row_images.append(aesthetic_predictor)
+                csv_file.append(csv_row_images)
+            try:
+                file_path = '../output/random_perturbations/'
+                write_to_csv(csv_file, filename, file_path, seed)
+            except:
+                continue
 
 
 def main():
     perturbations = Perturbations()
-    perturbations.perturbate_between_prompts()
-    #perturbations.random_perturbation()
+    #perturbations.perturbate_between_prompts()
+    perturbations.random_perturbation()
 
 
 if __name__ == "__main__":
