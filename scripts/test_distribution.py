@@ -128,7 +128,7 @@ def create_distribution_plots(data, prompt, dist_names, bins):
 
         title = 'Distribution: ' + dist_name
         plt.title(title)
-        save_distr_plot(prompt, './output/distr_test', dist_name)
+        save_distr_plot(prompt, '../output/distr_test', dist_name)
 
 
 def test_distribution(data, prompt, distribution = 'norm', test = 'kstest', plot_distr = False):

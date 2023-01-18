@@ -46,8 +46,8 @@ def write_to_csv(csv_rows, filename, file_path, seed=None):
             csvfile.flush()
 
 
-def retrieve_prompts():
-    url = 'https://lexica.art/api/v1/search?q=""'
+def retrieve_prompts(keyword = ""):
+    url = f'https://lexica.art/api/v1/search?q="{keyword}"'
 
     s = requests.Session()
     r = s.get(url)
