@@ -65,7 +65,7 @@ def make_dir(path, seed = None):
             os.mkdir(f'{path}/{seed}')
 
 
-def create_random_prompts(num_prompts, numeric = False):
+def create_random_prompts(num_prompts, numeric = False, random_prompt_len = False):
     # Create a string of all possible characters
     all_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     if numeric:
@@ -74,8 +74,9 @@ def create_random_prompts(num_prompts, numeric = False):
     prompts = []
     for _ in range(num_prompts):
         # Generate a random prompt length using the randint() function
-        prompt_length = random.randint(5, 51)
         prompt_length = 1
+        if random_prompt_len:
+            prompt_length = random.randint(5, 51)
         prompt = ""
         for _ in range(prompt_length):
             # Generate a random word length for the prompt using the randint() function
