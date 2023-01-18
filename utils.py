@@ -6,13 +6,18 @@ import pandas as pd
 import requests
 
 
-def create_boxplot(values, filename=None):
+def create_boxplot(values, prompt_aesthetics=None, filename=None):
     # Create the figure and boxplot
     fig, ax = plt.subplots()
     bp = ax.boxplot(values)
 
+    # Add the mean as an empty dot to the plot
+    if prompt_aesthetics is not None:
+        ax.scatter([1], [prompt_aesthetics], marker='o', color='blue', s=50)
+
     # Save the figure to disk if a filename is provided
     if filename is not None:
+        print(f'save {filename}')
         plt.savefig(filename)
 
     return fig
@@ -58,3 +63,30 @@ def make_dir(path, seed = None):
     if not seed is None:
         if not os.path.exists(f'{path}/{seed}'):
             os.mkdir(f'{path}/{seed}')
+
+
+def create_random_prompts(num_prompts, numeric = False):
+    # Create a string of all possible characters
+    all_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    if numeric:
+        all_characters = "0123456789"
+
+    prompts = []
+    for _ in range(num_prompts):
+        # Generate a random prompt length using the randint() function
+        prompt_length = random.randint(5, 51)
+        prompt_length = 1
+        prompt = ""
+        for _ in range(prompt_length):
+            # Generate a random word length for the prompt using the randint() function
+            word_length = random.randint(3, 31)
+            # Use the choices() function to randomly select `word_length` characters from `all_characters`
+            characters = random.choices(all_characters, k=word_length)
+            # Concatenate the selected characters to create a word
+            word = "".join(characters)
+            # Add the word to the prompt, separated by a space
+            prompt += word + " "
+        # Remove the extra space at the end of the prompt
+        prompt = prompt[:-1]
+        prompts.append(prompt)
+    return prompts

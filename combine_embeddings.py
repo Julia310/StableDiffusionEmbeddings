@@ -42,8 +42,6 @@ def main():
                "insanely complex, 8 k, sharp focus, hyperrealism, very realistic, by caspar friedrich, albert bierstadt, james gurney, brian froud, "]
 
 
-    prompts = [""]
-
     # Converting textual prompts to embedding
 
     ldm = StableDiffusion()
@@ -54,7 +52,7 @@ def main():
     prompts.append(f'{prompts[0][0:20]}_{prompts[1][0:20]}_{noise}')
 
     for i in range(len(prompts)):
-        ldm.embedding_2_img(prompts[i], emb_list[i])
+        ldm.embedding_2_img(prompts[i], emb_list[i], save_int=False)
 
 
 if __name__ == "__main__":

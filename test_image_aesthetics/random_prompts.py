@@ -2,33 +2,10 @@ import random
 from stable_diffusion import StableDiffusion
 from aesthetic_predictor.simple_inference import AestheticPredictor
 import os
-from utils import get_random_seeds, write_to_csv, make_dir
-
-def create_random_prompts(num_prompts):
-    # Create a string of all possible characters
-    all_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
-    prompts = []
-    for _ in range(num_prompts):
-        # Generate a random prompt length using the randint() function
-        prompt_length = random.randint(5, 51)
-        prompt = ""
-        for _ in range(prompt_length):
-            # Generate a random word length for the prompt using the randint() function
-            word_length = random.randint(3, 31)
-            # Use the choices() function to randomly select `word_length` characters from `all_characters`
-            characters = random.choices(all_characters, k=word_length)
-            # Concatenate the selected characters to create a word
-            word = "".join(characters)
-            # Add the word to the prompt, separated by a space
-            prompt += word + " "
-        # Remove the extra space at the end of the prompt
-        prompt = prompt[:-1]
-        prompts.append(prompt)
-    return prompts
+from utils import get_random_seeds, write_to_csv, make_dir, create_random_prompts, create_boxplot
 
 
-def main():
+def random_prompts():
     aesthetic_predictor = AestheticPredictor()
     prompts = create_random_prompts(100)
     seeds = get_random_seeds(10)
@@ -54,6 +31,21 @@ def main():
         csv_file_prompts.append(csw_row_prompts)
         write_to_csv(csv_file_images, 'random_prompts_images.csv', '../output/random/')
         write_to_csv(csv_file_prompts, 'random_prompts.csv', '../output/random/')
+
+
+def numeric_random_prompts():
+    aesthetic_predictor = AestheticPredictor()
+    prompts = create_random_prompts(1000, numeric=True)
+    aesthetic_pred_list = list()
+    for i in range(len(prompts)):
+        print(prompts[i])
+        aesthetic_pred_list.append(aesthetic_predictor.text_predict(prompts[i]))
+    create_boxplot(aesthetic_pred_list, filename="numeric_prompts_boxplot.png")
+
+
+def main():
+    numeric_random_prompts()
+
 
 
 if __name__ == "__main__":
