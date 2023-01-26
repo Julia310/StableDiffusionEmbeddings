@@ -1,10 +1,5 @@
-import random
-from stable_diffusion import StableDiffusion
 from aesthetic_predictor.simple_inference import AestheticPredictor
-import os
-from utils import create_random_prompts, create_boxplot, retrieve_prompts, get_random_seeds
-
-
+from utils import create_random_prompts, create_boxplot, retrieve_prompts
 
 
 def test_prompts():
@@ -24,7 +19,7 @@ def test_prompts():
     for i in range(len(prompts)):
         print(prompts[i])
         try:
-            aesthetic_pred_list.append(aesthetic_predictor.text_predict(prompts[i]))
+            aesthetic_pred_list.append(aesthetic_predictor.predict_aesthetic_score(prompts[i]))
         except Exception as e:
             print(str(e))
     create_boxplot(aesthetic_pred_list, filename="prompts_boxplot.png")

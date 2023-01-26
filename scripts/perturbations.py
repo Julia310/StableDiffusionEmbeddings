@@ -1,6 +1,5 @@
-from stable_diffusion import StableDiffusion
+from ldm.stable_diffusion import StableDiffusion
 import random
-import os
 from aesthetic_predictor.simple_inference import AestheticPredictor
 from utils import get_random_seeds, write_to_csv, retrieve_prompts, make_dir, sample_noise
 
@@ -62,7 +61,7 @@ class Perturbations:
     def aesthetic_prediction(self, emb_list, noise, prompt, seed):
         emb = self.ldm.combine_embeddings(emb_list[0], emb_list[1], noise)
         pil_image = self.ldm.embedding_2_img(prompt, emb, seed=seed, save_int=False)
-        aesthetic_predictor = self.aesthetic_predictor.img_predict(pil_image)
+        aesthetic_predictor = self.aesthetic_predictor.predict_aesthetic_score(pil_image)
         return emb, aesthetic_predictor, pil_image
 
     def perturbate_between_prompts(self):
@@ -86,7 +85,7 @@ class Perturbations:
         for seed in seeds:
             make_dir('../output/random_perturbations', seed)
             csv_file = list()
-            csv_file.append(['prompt'] + ["noise" + str(i) for i in range(50)])
+            csv_file.append(['input'] + ["noise" + str(i) for i in range(50)])
             filename = f'{seed}.csv'
             for i in range(len(self.prompts)):
                 csv_row_images = list()
@@ -97,7 +96,7 @@ class Perturbations:
                 emb = self.ldm.get_embedding([prompt])[0]
                 pil_image = self.ldm.embedding_2_img('0_' + prompt, emb, seed=seed, save_int=False)
                 pil_image.save(f'./output/random_perturbations/{seed}/{prompt[0:30]}_0.jpg')
-                csv_row_images.append(self.aesthetic_predictor.img_predict(pil_image))
+                csv_row_images.append(self.aesthetic_predictor.predict_aesthetic_score(pil_image))
                 for j in range(1, 50):
                     noise = sample_noise(emb)
                     emb, aesthetic_predictor, pil_image = self.aesthetic_prediction([emb, noise], 0.01, str(j) + '_' + prompt, seed)

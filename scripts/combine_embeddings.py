@@ -1,5 +1,4 @@
-from stable_diffusion import StableDiffusion
-import torch
+from ldm.stable_diffusion import StableDiffusion
 
 
 def main():

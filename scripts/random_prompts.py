@@ -1,7 +1,5 @@
-import random
-from stable_diffusion import StableDiffusion
+from ldm.stable_diffusion import StableDiffusion
 from aesthetic_predictor.simple_inference import AestheticPredictor
-import os
 from utils import get_random_seeds, write_to_csv, make_dir, create_random_prompts, create_boxplot
 
 
@@ -14,19 +12,19 @@ def random_prompts():
     make_dir(f'../output/random')
     csv_file_images = list()
     csv_file_prompts = list()
-    csv_file_images.append(['prompt'] + seeds)
-    csv_file_prompts.append(['prompt, aesthetic_score'])
+    csv_file_images.append(['input'] + seeds)
+    csv_file_prompts.append(['input, aesthetic_score'])
     for i in range(len(prompts)):
         csw_row_images = list()
         csw_row_images.append(prompts[i])
-        csw_row_prompts = [prompts[i], aesthetic_predictor.text_predict(prompts[i])]
+        csw_row_prompts = [prompts[i], aesthetic_predictor.predict_aesthetic_score(prompts[i])]
         emb = emb_list[i]
         for seed in seeds:
             make_dir(f'../output/random', seed)
             pil_image = ldm.embedding_2_img(prompts[i], emb, seed=seed, save_int=False)
-            #pil_image.save(f'./output/random/{seed}/{prompts[i][0:30]}.jpg')
+            #predict_aesthetic_score.save(f'./output/random/{seed}/{prompts[i][0:30]}.jpg')
 
-            csw_row_images.append(aesthetic_predictor.img_predict(pil_image))
+            csw_row_images.append(aesthetic_predictor.predict_aesthetic_score(pil_image))
         csv_file_images.append(csw_row_images)
         csv_file_prompts.append(csw_row_prompts)
         write_to_csv(csv_file_images, 'random_prompts_images.csv', '../output/random/')
@@ -40,7 +38,7 @@ def numeric_random_prompts():
     aesthetic_pred_list = list()
     for i in range(len(prompts)):
         print(prompts[i])
-        aesthetic_pred_list.append(aesthetic_predictor.text_predict(prompts[i]))
+        aesthetic_pred_list.append(aesthetic_predictor.predict_aesthetic_score(prompts[i]))
     create_boxplot(aesthetic_pred_list, filename="numeric_prompts_boxplot.png")
 
 

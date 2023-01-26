@@ -109,7 +109,7 @@ class StableDiffusion:
 
     def embedding_2_img(self, prompt, emb, g=7.5, seed=61582, steps=70, dim=512, save_int=True):
         """
-        Diffusion process to convert prompt to image
+        Diffusion process to convert input to image
         """
         if seed: torch.manual_seed(seed)
         latents = torch.randn((1, self.unet.in_channels, dim // 8, dim // 8))

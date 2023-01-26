@@ -1,5 +1,5 @@
 from utils import sample_noise, get_random_seeds, create_boxplot, make_dir
-from stable_diffusion import StableDiffusion
+from ldm.stable_diffusion import StableDiffusion
 from aesthetic_predictor.simple_inference import AestheticPredictor
 
 
@@ -18,5 +18,5 @@ if __name__ == "__main__":
             pil_image = ldm.embedding_2_img('', rand_emb, seed=seed, save_int=False)
             pil_image.save(f'../output/rand_emb/{i}/{seed}_{i}.jpg')
 
-            predictions.append(aesthetic_predictor.img_predict(pil_image))
+            predictions.append(aesthetic_predictor.predict_aesthetic_score(pil_image))
         create_boxplot(values=predictions, filename=f'../output/rand_emb/{i}_rand_emb_boxplot.png')

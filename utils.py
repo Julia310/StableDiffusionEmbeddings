@@ -56,7 +56,7 @@ def retrieve_prompts(keyword = ""):
 
     df = pd.json_normalize(r.json()['images'])
 
-    return df['prompt']
+    return df['input']
 
 
 def make_dir(path, seed = None):
@@ -75,21 +75,21 @@ def create_random_prompts(num_prompts, numeric = False, random_prompt_len = Fals
 
     prompts = []
     for _ in range(num_prompts):
-        # Generate a random prompt length using the randint() function
+        # Generate a random input length using the randint() function
         prompt_length = 1
         if random_prompt_len:
             prompt_length = random.randint(5, 51)
         prompt = ""
         for _ in range(prompt_length):
-            # Generate a random word length for the prompt using the randint() function
+            # Generate a random word length for the input using the randint() function
             word_length = random.randint(3, 31)
             # Use the choices() function to randomly select `word_length` characters from `all_characters`
             characters = random.choices(all_characters, k=word_length)
             # Concatenate the selected characters to create a word
             word = "".join(characters)
-            # Add the word to the prompt, separated by a space
+            # Add the word to the input, separated by a space
             prompt += word + " "
-        # Remove the extra space at the end of the prompt
+        # Remove the extra space at the end of the input
         prompt = prompt[:-1]
         prompts.append(prompt)
     return prompts

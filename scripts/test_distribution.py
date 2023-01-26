@@ -1,15 +1,12 @@
-from scipy.stats import anderson, kstest, logistic, probplot, shapiro, jarque_bera, chisquare, normaltest
+from scipy.stats import anderson, kstest
 import scipy.stats
 import seaborn as sns
 import matplotlib.pyplot as plt
 from utils import make_dir, retrieve_prompts, create_random_prompts
-from stable_diffusion import StableDiffusion
+from ldm.stable_diffusion import StableDiffusion
 import torch
 import numpy as np
-import pylab
-from fitter import Fitter, get_distributions, get_common_distributions
-import statsmodels.api as sm
-
+from fitter import Fitter, get_common_distributions
 
 prompts = ["goddess made of ice long hair like a waterfall, full body, horizontal symmetry!, elegant, intricate, highly detailed, fractal background, digital painting, artstation, concept art, wallpaper, smooth, sharp focus, illustration, epic light, art by kay nielsen and zeen chin and wadim kashin and sangyeob park, terada katsuya ",
 "a dad angry at missing his flight from prague to nyc, the dad is drunk ",
@@ -155,9 +152,9 @@ def test_complete_embeddings():
         emb_flat = torch.flatten(emb)
         emb_flat = emb_flat.cpu().detach().numpy()
         create_distribution_plots(emb_flat, prompt, ['norm'], bins=40)
-        # test_distribution(emb_fla, prompt, test = 'kstest')
-        # test_distribution(emb_flat, prompt, 'genhyperbolic')
-        # test_distributions(emb_flat, prompt, ['norm', 'logistic', 'genhyperbolic'])
+        # test_distribution(emb_fla, input, test = 'kstest')
+        # test_distribution(emb_flat, input, 'genhyperbolic')
+        # test_distributions(emb_flat, input, ['norm', 'logistic', 'genhyperbolic'])
         # fit_distribution(emb_flat)
         break
         print('')
@@ -198,7 +195,7 @@ def q_q_plot(prompts = None):
             ks_test(emb, distribution='genhyperbolic')
             #print(shapiro(emb))
             #sm.qqplot(emb, line='45')
-            #pylab.savefig(f'{i}_{prompt}')
+            #pylab.savefig(f'{i}_{input}')
 
 
 
