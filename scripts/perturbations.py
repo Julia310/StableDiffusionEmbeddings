@@ -1,20 +1,8 @@
-import torch
-from torch.distributions.normal import Normal
 from stable_diffusion import StableDiffusion
 import random
 import os
 from aesthetic_predictor.simple_inference import AestheticPredictor
-from utils import get_random_seeds, write_to_csv, retrieve_prompts, make_dir
-
-
-def sample_noise(embedding):
-    std = torch.std(embedding)
-    mean = torch.mean(embedding)
-    shape = embedding.shape
-    sampler = Normal(mean, std)
-    sample = sampler.sample(shape)
-
-    return sample
+from utils import get_random_seeds, write_to_csv, retrieve_prompts, make_dir, sample_noise
 
 
 def generate_random_integers():

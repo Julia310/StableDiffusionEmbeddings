@@ -36,6 +36,7 @@ def random_prompts():
 def numeric_random_prompts():
     aesthetic_predictor = AestheticPredictor()
     prompts = create_random_prompts(1000, numeric=True)
+
     aesthetic_pred_list = list()
     for i in range(len(prompts)):
         print(prompts[i])

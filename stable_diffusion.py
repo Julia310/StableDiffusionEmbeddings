@@ -5,7 +5,8 @@ from tqdm import tqdm
 import os
 from PIL import Image
 from torchvision import transforms as tfms
-
+from utils import sample_noise
+import clip
 
 class StableDiffusion:
 
@@ -30,6 +31,7 @@ class StableDiffusion:
         if maxlen is None: maxlen = self.tokenizer.model_max_length
         inp = self.tokenizer(prompts, padding="max_length", max_length=maxlen, truncation=True, return_tensors="pt")
         return self.text_encoder(inp.input_ids.to("cuda"))[0].half()
+
 
     def latents_to_pil(self, latents):
         '''
@@ -70,6 +72,18 @@ class StableDiffusion:
             embedding_list.append(emb)
 
         return embedding_list
+
+    def random_embedding(self, shape, std, mean, num):
+        embedding_list = list()
+        for i in range(num):
+            text_encoded = sample_noise(std, mean, shape)
+
+            uncond = self.text_enc([""], shape)
+            emb = torch.cat([uncond, text_encoded])
+            embedding_list.append(emb)
+
+        return embedding_list
+
 
     def get_cov(self, X, Y):
         mean_X = torch.mean(X)

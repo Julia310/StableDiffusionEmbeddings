@@ -4,6 +4,8 @@ import os
 import csv
 import pandas as pd
 import requests
+import torch
+from torch import normal, randn
 
 
 def create_boxplot(values, prompt_aesthetics=None, filename=None):
@@ -91,3 +93,13 @@ def create_random_prompts(num_prompts, numeric = False, random_prompt_len = Fals
         prompt = prompt[:-1]
         prompts.append(prompt)
     return prompts
+
+
+def sample_noise(std, mean, shape, num = 1):
+    sample_list = list()
+    while len(sample_list) < num:
+        sample = randn(size=shape, dtype=torch.float16)
+        #sample = normal(mean=mean, std=std, size=shape)
+        sample_list.append(sample)
+
+    return sample_list

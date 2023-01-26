@@ -1,4 +1,4 @@
-from scipy.stats import anderson, kstest, logistic
+from scipy.stats import anderson, kstest, logistic, probplot, shapiro, jarque_bera, chisquare, normaltest
 import scipy.stats
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -6,8 +6,9 @@ from utils import make_dir, retrieve_prompts, create_random_prompts
 from stable_diffusion import StableDiffusion
 import torch
 import numpy as np
-import os
+import pylab
 from fitter import Fitter, get_distributions, get_common_distributions
+import statsmodels.api as sm
 
 
 prompts = ["goddess made of ice long hair like a waterfall, full body, horizontal symmetry!, elegant, intricate, highly detailed, fractal background, digital painting, artstation, concept art, wallpaper, smooth, sharp focus, illustration, epic light, art by kay nielsen and zeen chin and wadim kashin and sangyeob park, terada katsuya ",
@@ -61,13 +62,16 @@ prompts = ["goddess made of ice long hair like a waterfall, full body, horizonta
 "a portrait of an overwhelmed young man in a painting from stalenhag, 4 k, 8 k, hdr, artstation, concept art ",
 "ben shapiro destroys the leftists with facts an logic "]
 
-def test_normality_anderson(data):
-    result = anderson(data)
-    sig_level, crit_val = result.significance_level[2], result.critical_values[2]
-    if result.statistic < crit_val:
-        print(f'Probability Gaussian : {crit_val} critical value at {sig_level} level of significance')
-    else:
-        print(f'Probability not Gaussian : {crit_val} critical value at {sig_level} level of significance')
+def test_normality_anderson(data, distribution = 'norm'):
+    print('======================')
+    result = anderson(data, dist=distribution)
+    #result = result.significance_level, result.critical_values
+    for i in range(len(result.critical_values)):
+        sig_level, crit_val = result.significance_level[i], result.critical_values[i]
+        if result.statistic < crit_val:
+            print(f'Probability Gaussian : {crit_val} critical value at {sig_level} level of significance')
+        else:
+            print(f'Probability not Gaussian : {crit_val} critical value at {sig_level} level of significance')
 
 
 def ks_test(data, distribution = 'norm'):
@@ -159,7 +163,7 @@ def test_complete_embeddings():
         print('')
 
 
-def test_embedding_dimensions(prompts):
+def test_embedding_dimensions(prompts = None):
     if prompts is None:
         prompts = retrieve_prompts()
     ldm = StableDiffusion()
@@ -175,10 +179,33 @@ def test_embedding_dimensions(prompts):
         if j == 3:
             break
 
+def q_q_plot(prompts = None):
+    if prompts is None:
+        prompts = retrieve_prompts()
+    ldm = StableDiffusion()
+    for j in range(len(prompts)):
+        prompt = prompts[j]
+        emb_condition = ldm.get_embedding([prompt])[0][1]
+        i = 0
+        if j == 1:
+            break
+        for emb in emb_condition:
+            print(emb.shape)
+            i += 1
+            emb = emb.cpu().detach().numpy()
+            #probplot(emb, dist="norm", plot=pylab)
+            #emb = np.random.normal(loc=20, scale=5, size=emb.shape)
+            ks_test(emb, distribution='genhyperbolic')
+            #print(shapiro(emb))
+            #sm.qqplot(emb, line='45')
+            #pylab.savefig(f'{i}_{prompt}')
+
+
 
 if __name__ == "__main__":
     #test_complete_embeddings()
     #test_embedding_dimensions(prompts)
     rand_prompts = create_random_prompts(5, numeric=True)
-    test_embedding_dimensions(rand_prompts)
+    #test_embedding_dimensions(rand_prompts)
+    q_q_plot(prompts)
 
