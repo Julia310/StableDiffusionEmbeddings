@@ -19,7 +19,7 @@ def test_prompts():
     for i in range(len(prompts)):
         print(prompts[i])
         try:
-            aesthetic_pred_list.append(aesthetic_predictor.predict_aesthetic_score(prompts[i]))
+            aesthetic_pred_list.append(aesthetic_predictor.predict_aesthetic_score(prompts[i], image_input=False))
         except Exception as e:
             print(str(e))
     create_boxplot(aesthetic_pred_list, filename="prompts_boxplot.png")

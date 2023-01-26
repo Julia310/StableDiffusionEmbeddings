@@ -95,7 +95,7 @@ def create_random_prompts(num_prompts, numeric = False, random_prompt_len = Fals
     return prompts
 
 
-def sample_noise(std, mean, shape, num = 1):
+def sample_noise(shape, num = 1):
     sample_list = list()
     while len(sample_list) < num:
         sample = randn(size=shape, dtype=torch.float16)

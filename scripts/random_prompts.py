@@ -17,7 +17,7 @@ def random_prompts():
     for i in range(len(prompts)):
         csw_row_images = list()
         csw_row_images.append(prompts[i])
-        csw_row_prompts = [prompts[i], aesthetic_predictor.predict_aesthetic_score(prompts[i])]
+        csw_row_prompts = [prompts[i], aesthetic_predictor.predict_aesthetic_score(prompts[i], image_input=False)]
         emb = emb_list[i]
         for seed in seeds:
             make_dir(f'../output/random', seed)

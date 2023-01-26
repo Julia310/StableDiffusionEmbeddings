@@ -13,10 +13,10 @@ def main():
     #emb[:,36:] = emb[:,36:37]
     #emb = emb[:, -10:]
     #make_dir(f'../output/improve_prompt', seed)
-    #perturbed_emb = gradient_ascent.get_gradient(prompt, image_input=False)
-    #emb[1] = perturbed_emb
+    perturbed_emb = gradient_ascent.get_gradient(prompt, image_input=False)
+    emb[1] = perturbed_emb
     pil_image = ldm.embedding_2_img(prompt, emb, seed=seed, save_int=False)
-    gradient_ascent.get_gradient(pil_image)
+    #gradient_ascent.get_gradient(pil_image)
     pil_image.save(f'../output/{prompt[0:30]}.jpg')
 
 

@@ -25,7 +25,7 @@ def main():
         seeds = get_random_seeds(1000)
         ldm = StableDiffusion()
         aesthetic_predictor = AestheticPredictor()
-        prompt_prediction = aesthetic_predictor.predict_aesthetic_score(prompt)
+        prompt_prediction = aesthetic_predictor.predict_aesthetic_score(prompt,  image_input=False)
         emb = ldm.get_embedding(prompts=[prompt])[0]
 
         for seed in seeds:

@@ -98,7 +98,7 @@ class Perturbations:
                 pil_image.save(f'./output/random_perturbations/{seed}/{prompt[0:30]}_0.jpg')
                 csv_row_images.append(self.aesthetic_predictor.predict_aesthetic_score(pil_image))
                 for j in range(1, 50):
-                    noise = sample_noise(emb)
+                    noise = sample_noise(emb.shape)
                     emb, aesthetic_predictor, pil_image = self.aesthetic_prediction([emb, noise], 0.01, str(j) + '_' + prompt, seed)
                     pil_image.save(f'./output/random_perturbations/{seed}/{prompt[0:30]}_{j}.jpg')
                     csv_row_images.append(aesthetic_predictor)
