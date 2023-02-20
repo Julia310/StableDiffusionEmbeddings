@@ -64,9 +64,7 @@ def compare_clip_embeddings(comp = 3):
     print('')
 
 
-def compare_ldm_conditions(comp = 1):
-    emb_1 = get_clip_embedding([prompt])
-    emb_2 = get_clip_embedding([prompt2])
+def compare_ldm_conditions(emb_1, emb_2, comp=1):
     equal_dims = list()
     similar_values = list()
     for i in range(emb_1.shape[1]):
@@ -122,5 +120,8 @@ def test_embedding(comp = 1):
 
 
 if __name__ == '__main__':
+    emb_1 = get_clip_embedding([prompt])
+    emb_2 = get_clip_embedding([prompt2])
+    compare_ldm_conditions(emb_1, emb_2)
     #compare_clip_embeddings(comp=3)
-    test_embedding()
+    #test_embedding()
