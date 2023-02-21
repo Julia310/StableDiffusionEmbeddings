@@ -8,6 +8,9 @@ prompt = "realistic portrait of a beautiful fox in a fairy wood, 8k, ultra reali
 
 prompt = "ugly meme, funniest thing ever"
 
+prompt = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
+               'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
+
 
 class ImageImprovement:
     def __init__(self, prompt):
@@ -29,13 +32,14 @@ class ImageImprovement:
         condition2 = torch.empty(condition.shape, dtype=torch.float16).cuda()
         condition2[:, 0] = condition[:, 0].clone()
         for i in range(1, condition.shape[1]):
+        #for i in range(44, 45):
             condition2[:, i] = self.improve_features(condition[:, i])
         return condition2
 
     def condition_to_image(self, condition, file_name):
         embedding = torch.cat([self.uncondition, condition])
         pil_image = self.ldm.embedding_2_img(prompt, embedding, seed=self.seed, save_int=False)
-        pil_image.save(f'../output/{file_name}')
+        pil_image.save(f'./output/{file_name}')
         self.aesthetic_predictor.predict_aesthetic_score(input=pil_image, image_input=True)
 
     def improve_image(self, num_images):

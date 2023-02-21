@@ -1,0 +1,9 @@
+transformers
+diffusers
+scipy
+git+https://github.com/openai/CLIP.git
+matplotlib
+pandas
+fitter
+seaborn
+pytorch_lightning

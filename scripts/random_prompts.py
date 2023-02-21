@@ -9,7 +9,7 @@ def random_prompts():
     seeds = get_random_seeds(10)
     ldm = StableDiffusion()
     emb_list = ldm.get_embedding(prompts)
-    make_dir(f'../output/random')
+    make_dir(f'./output/random')
     csv_file_images = list()
     csv_file_prompts = list()
     csv_file_images.append(['input'] + seeds)
@@ -20,15 +20,15 @@ def random_prompts():
         csw_row_prompts = [prompts[i], aesthetic_predictor.predict_aesthetic_score(prompts[i], image_input=False)]
         emb = emb_list[i]
         for seed in seeds:
-            make_dir(f'../output/random', seed)
+            make_dir(f'./output/random', seed)
             pil_image = ldm.embedding_2_img(prompts[i], emb, seed=seed, save_int=False)
             #predict_aesthetic_score.save(f'./output/random/{seed}/{prompts[i][0:30]}.jpg')
 
             csw_row_images.append(aesthetic_predictor.predict_aesthetic_score(pil_image))
         csv_file_images.append(csw_row_images)
         csv_file_prompts.append(csw_row_prompts)
-        write_to_csv(csv_file_images, 'random_prompts_images.csv', '../output/random/')
-        write_to_csv(csv_file_prompts, 'random_prompts.csv', '../output/random/')
+        write_to_csv(csv_file_images, 'random_prompts_images.csv', './output/random/')
+        write_to_csv(csv_file_prompts, 'random_prompts.csv', './output/random/')
 
 
 def numeric_random_prompts():

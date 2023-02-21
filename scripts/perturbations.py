@@ -67,7 +67,7 @@ class Perturbations:
     def perturbate_between_prompts(self):
         seed = get_random_seeds(1)[0]
         filename = 'perturbations.csv'
-        file_path = '../output/perturbations/'
+        file_path = './output/perturbations/'
         make_dir(file_path)
         csv_rows = [['prompt1', 'prompt2'] + list(map(lambda x: str(x), range(11)))]
         for i in range(len(self.prompt_pairs)):
@@ -83,7 +83,7 @@ class Perturbations:
         #seeds = [699239, 9027454]
         self.prompts = [self.prompts[0], self.prompts[1]]
         for seed in seeds:
-            make_dir('../output/random_perturbations', seed)
+            make_dir('./output/random_perturbations', seed)
             csv_file = list()
             csv_file.append(['input'] + ["noise" + str(i) for i in range(50)])
             filename = f'{seed}.csv'
@@ -104,7 +104,7 @@ class Perturbations:
                     csv_row_images.append(aesthetic_predictor)
                 csv_file.append(csv_row_images)
             try:
-                file_path = '../output/random_perturbations/'
+                file_path = './output/random_perturbations/'
                 write_to_csv(csv_file, filename, file_path, seed)
             except:
                 continue

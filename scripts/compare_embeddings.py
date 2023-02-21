@@ -24,17 +24,20 @@ def get_clip_embedding(prompts, maxlen = None):
     return text_encoder(inp.input_ids.to("cuda"))[0].half()
 
 
-def compare_tensors(tensor1, tensor2, comp = 1):
+def compare_tensors(tensor1, tensor2, comparison = 1):
     tens_b = tensor2
     equal = False
-    size = tensor1.shape[1]
-    for i in range(size):
+
+    #tensor1 : (1, 77, 768)
+    #tensor2 : (1, 768)
+
+    for i in range(tensor1.shape[1]):
         tens_a = tensor1[:, i]
 
-        if comp == 1:
+        if comparison == 1:
             equal = tens_a.eq(tens_b)
 
-        elif comp == 2:
+        elif comparison == 2:
             equal = []
             for j in range(tensor1.shape[2]):
                 a = float(tens_a[0][j])
@@ -42,7 +45,7 @@ def compare_tensors(tensor1, tensor2, comp = 1):
                 if 0.8 < a / b < 1.2:
                     equal.append(True)
                 else:
-                    return False
+                    equal.append(False)
 
         else:
             embedding_similarities = list()
@@ -53,75 +56,97 @@ def compare_tensors(tensor1, tensor2, comp = 1):
                 # embedding_similarities.append(float(cos(tens_a, tens_b)))
                 embedding_similarities.append(np.dot(tens_a, tens_b) / (norm(tens_a, ord=2) * norm(tens_b, ord=2)))
             return max(embedding_similarities)
-    return torch.all(equal)
+        if all(equal):
+            print(i)
+            return True
+        else:
+            continue
+    return False
 
 
-def compare_clip_embeddings(comp = 3):
+def compare_clip_embeddings(comparison = 3):
     aesthetic_predictor = AestheticPredictor()
     emb_1 = get_clip_embedding([prompt])
-    emb_2 = aesthetic_predictor.get_features(input=prompt, image_input=False, normalize=False)
-    print(compare_tensors(emb_1, emb_2, comp=comp))
+    emb_2 = aesthetic_predictor.get_features(input=prompt, text_input = True, image_input=False, normalize=False)
+    print(compare_tensors(emb_1, emb_2, comparison))
     print('')
 
 
-def compare_ldm_conditions(emb_1, emb_2, comp=1):
+def compare_ldm_conditions(emb_1, emb_2, comparison=1):
     equal_dims = list()
     similar_values = list()
-    for i in range(emb_1.shape[1]):
+    for i in range(1, emb_1.shape[1]):
         tens_a = emb_1[:, i]
         tens_b = emb_2[:, i]
         #print(tens_a.eq(tens_b))
-        if comp == 1:
+        if comparison == 1:
             if torch.all(tens_a.eq(tens_b)):
                 equal_dims.append(i)
                 print('equal for index: ' + str(i))
-        elif comp == 2:
+        else:
             tens_a = torch.flatten(tens_a).to("cpu").detach().numpy()
             tens_b = torch.flatten(tens_b).to("cpu").detach().numpy()
             equal_dims.append(np.dot(tens_a, tens_b) / (norm(tens_a, ord=2) * norm(tens_b, ord=2)))
             #return embedding_similarities
-        else:
-            for j in range(emb_1.shape[2]):
-                if i == 0:
-                    break
-                a = float(tens_a[0, j])
-                b = float(tens_b[0, j])
-                if 0.8 < a / b < 1.2:
-                    similar_values.append([i, j])
-                if j == emb_1.shape[2] - 1:
-                    equal_dims.append([i, len(similar_values)])
-                    similar_values = list()
 
     return equal_dims
 
 
-def test_embedding(comp = 1):
-    emb_1 = get_clip_embedding([prompt])
+def test_embedding(comparison = 1):
+    emb_1 = get_clip_embedding([prompt]).to("cpu").detach().numpy().astype('float')
     equal_dims = list()
+    similar_values = list()
     for i in range(emb_1.shape[1] - 1):
-        similar_values = list()
         tens_a = emb_1[:, i]
         tens_b = emb_1[:, i + 1]
-        for j in range(emb_1.shape[2]):
+        '''for j in range(emb_1.shape[2]):
             if i == 0:
                 break
             a = float(tens_a[0, j])
             b = float(tens_b[0, j])
-            if comp == 1:
+            if comparison == 1:
                 if a==b:
                     similar_values.append([i, j])
-            if comp == 2:
+            if comparison == 2:
                 if 0.8 < a / b < 1.2:
-                    similar_values.append([i, j])
+                    similar_values.append([i, j])'''
+        if comparison == 3:
+            similar_values.append(np.dot(tens_a, tens_b.T) / (norm(tens_a, ord=2) * norm(tens_b, ord=2)))
 
         equal_dims.append([i, len(similar_values)])
-        print(similar_values)
+    print(similar_values)
+    return equal_dims
+
+def test_embedding(comparison = 1):
+    aesthetic_predictor = AestheticPredictor()
+    emb_1 = get_clip_embedding([prompt]).to("cpu").detach().numpy().astype('float')
+    emb_2 = aesthetic_predictor.get_features(input=prompt, text_input=True, image_input=False, normalize=False)
+    emb_2 = emb_2.to("cpu").detach().numpy().astype('float')
+    equal_dims = list()
+    similar_values = list()
+    for i in range(emb_1.shape[1]):
+        tens_a = emb_1[:, i]
+        tens_b = emb_2[:]
+        '''for j in range(emb_1.shape[2]):
+            if i == 0:
+                break
+            a = float(tens_a[0, j])
+            b = float(tens_b[0, j])
+            if comparison == 1:
+                if a==b:
+                    similar_values.append([i, j])
+            if comparison == 2:
+                if 0.8 < a / b < 1.2:
+                    similar_values.append([i, j])'''
+        if comparison == 3:
+            similar_values.append(np.dot(tens_a, tens_b.T) / (norm(tens_a, ord=2) * norm(tens_b, ord=2)))
+
+        equal_dims.append([i, len(similar_values)])
+    print(similar_values)
     return equal_dims
 
 
 if __name__ == '__main__':
-    emb_1 = get_clip_embedding([prompt])
-    emb_2 = get_clip_embedding([prompt2])
-    compare_ldm_conditions(emb_1, emb_2)
-    #compare_clip_embeddings(comp=3)
-    #test_embedding()
+    #compare_clip_embeddings()
+    #print(compare_ldm_conditions(get_clip_embedding([prompt]), get_clip_embedding([prompt2]), 2))
+    test_embedding(3)
