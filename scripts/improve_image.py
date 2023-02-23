@@ -6,10 +6,10 @@ from aesthetic_predictor.simple_inference import AestheticPredictor
 prompt = "realistic portrait of a beautiful fox in a fairy wood, 8k, ultra realistic, atmosphere, glow, detailed, " \
          "intricate, full of colour, trending on artstation, masterpiece"
 
-prompt = "ugly meme, funniest thing ever"
-
 prompt = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
                'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
+
+prompt = "ugly meme, funniest thing ever"
 
 
 class ImageImprovement:
@@ -54,7 +54,7 @@ class ImageImprovement:
 
 def main():
     img_improvement = ImageImprovement(prompt)
-    img_improvement.improve_image(5)
+    img_improvement.improve_image(10)
 
 
 if __name__ == "__main__":
