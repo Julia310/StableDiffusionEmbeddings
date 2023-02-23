@@ -6,8 +6,10 @@ from torchvision.transforms import CenterCrop, Resize, Normalize, InterpolationM
 
 seed=61582
 dim=256
+
 ldm = StableDiffusion()
 aesthetic_predictor = AestheticPredictor()
+
 prompt = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
                'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 

@@ -3,8 +3,8 @@ from utils import create_random_prompts, create_boxplot, retrieve_prompts
 
 
 def test_prompts():
-    aesthetic_predictor = AestheticPredictor(device='cpu')
-    '''rand_prompts = create_random_prompts(50)
+    aesthetic_predictor = AestheticPredictor()
+    rand_prompts = create_random_prompts(50)
     prompts = list()
     for prompt in rand_prompts:
         try:
@@ -12,8 +12,7 @@ def test_prompts():
             prompts = prompts + retrieved
         except Exception as e:
             print(str(e))
-    prompts = list(set(prompts))'''
-    prompts = create_random_prompts(50)
+    prompts = list(set(prompts))
     print(f'prompt list length: {len(prompts)}')
 
     aesthetic_pred_list = list()

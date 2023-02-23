@@ -127,6 +127,7 @@ class StableDiffusion:
         """
         Diffusion process to convert input to image
         """
+
         if seed: torch.manual_seed(seed)
 
         # Setting number of steps in scheduler
