@@ -30,7 +30,7 @@ def main():
 
         for seed in seeds:
 
-            pil_image = ldm.embedding_2_img('', emb, seed=seed, save_int=False)
+            pil_image = ldm.embedding_2_img('', emb, seed=seed, save_img=False)
             pil_image.save(f'./output/test_random_seeds/{prompt}/{seed}_{prompt[0:30]}.jpg')
 
             predictions.append(aesthetic_predictor.predict_aesthetic_score(pil_image))

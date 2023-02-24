@@ -21,7 +21,7 @@ def random_prompts():
         emb = emb_list[i]
         for seed in seeds:
             make_dir(f'./output/random', seed)
-            pil_image = ldm.embedding_2_img(prompts[i], emb, seed=seed, save_int=False)
+            pil_image = ldm.embedding_2_img(prompts[i], emb, seed=seed, save_img=False)
             #predict_aesthetic_score.save(f'./output/random/{seed}/{prompts[i][0:30]}.jpg')
 
             csw_row_images.append(aesthetic_predictor.predict_aesthetic_score(pil_image))

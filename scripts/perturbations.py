@@ -60,7 +60,7 @@ class Perturbations:
 
     def aesthetic_prediction(self, emb_list, noise, prompt, seed):
         emb = self.ldm.combine_embeddings(emb_list[0], emb_list[1], noise)
-        pil_image = self.ldm.embedding_2_img(prompt, emb, seed=seed, save_int=False)
+        pil_image = self.ldm.embedding_2_img(prompt, emb, seed=seed, save_img=False)
         aesthetic_predictor = self.aesthetic_predictor.predict_aesthetic_score(pil_image)
         return emb, aesthetic_predictor, pil_image
 
@@ -94,7 +94,7 @@ class Perturbations:
                 print('========================================')
                 print(prompt)
                 emb = self.ldm.get_embedding([prompt])[0]
-                pil_image = self.ldm.embedding_2_img('0_' + prompt, emb, seed=seed, save_int=False)
+                pil_image = self.ldm.embedding_2_img('0_' + prompt, emb, seed=seed, save_img=False)
                 pil_image.save(f'./output/random_perturbations/{seed}/{prompt[0:30]}_0.jpg')
                 csv_row_images.append(self.aesthetic_predictor.predict_aesthetic_score(pil_image))
                 for j in range(1, 50):

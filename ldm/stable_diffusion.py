@@ -123,7 +123,7 @@ class StableDiffusion:
             latents = latents.to(self.device).half() * self.scheduler.init_noise_sigma
         return latents
 
-    def embedding_2_img(self, prompt, emb, return_pil=True, dim=512, g=7.5, seed=61582, steps=70, save_int=True):
+    def embedding_2_img(self, prompt, emb, return_pil=True, dim=512, g=7.5, seed=61582, steps=70, save_img=True):
         """
         Diffusion process to convert input to image
         """
@@ -155,7 +155,7 @@ class StableDiffusion:
         pil_image = self.latents_to_pil(latents)[0]
 
         # Saving image
-        if save_int:
+        if save_img:
             if not os.path.exists(f'./steps'):
                 os.mkdir(f'./steps')
             pil_image.save(f'output/{prompt[0:45]}.jpg')

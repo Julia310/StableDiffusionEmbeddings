@@ -51,7 +51,7 @@ def main():
     prompts.append(f'{prompts[0][0:20]}_{prompts[1][0:20]}_{noise}')
 
     for i in range(len(prompts)):
-        ldm.embedding_2_img(prompts[i], emb_list[i], save_int=False)
+        ldm.embedding_2_img(prompts[i], emb_list[i], save_img=False)
 
 
 if __name__ == "__main__":

@@ -5,10 +5,12 @@ from torchvision.transforms import CenterCrop, Resize, Normalize, InterpolationM
 
 
 seed=61582
-dim=256
+dim=128
 
-ldm = StableDiffusion()
-aesthetic_predictor = AestheticPredictor()
+device='cuda'
+
+ldm = StableDiffusion(device=device)
+aesthetic_predictor = AestheticPredictor(device=device)
 
 prompt = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
                'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
@@ -44,16 +46,23 @@ class GradientDescent(torch.nn.Module):
 
 
 if __name__ == '__main__':
+    emb_list = list()
     eta = 0.01
     gradient_descent = GradientDescent()
     with torch.no_grad():
         text_embedding = ldm.get_embedding([prompt])[0]
     text_embedding.requires_grad = True
-    loss = gradient_descent.forward(text_embedding, steps=50)
+    loss = gradient_descent.forward(text_embedding, steps=70)
     loss.backward()
     grad = text_embedding.grad.data
     print(grad)
-    text_embedding = text_embedding + eta * grad # gradient ascent
+    #emb_list.append(text_embedding)
+    ldm.embedding_2_img(f'{0}_{prompt}', text_embedding, dim=dim, save_img=True)
+
+    for i in range(100):
+        text_embedding = text_embedding + eta * grad # gradient ascent
+        #emb_list.append(text_embedding)
+        ldm.embedding_2_img(f'{i+1}_{prompt}', text_embedding, dim=dim, save_img=True)
 
 
 

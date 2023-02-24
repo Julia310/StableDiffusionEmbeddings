@@ -38,7 +38,7 @@ class ImageImprovement:
 
     def condition_to_image(self, condition, file_name):
         embedding = torch.cat([self.uncondition, condition])
-        pil_image = self.ldm.embedding_2_img(prompt, embedding, seed=self.seed, save_int=False)
+        pil_image = self.ldm.embedding_2_img(prompt, embedding, seed=self.seed, save_img=False)
         pil_image.save(f'./output/{file_name}')
         self.aesthetic_predictor.predict_aesthetic_score(input=pil_image, image_input=True)
 

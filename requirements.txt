@@ -7,3 +7,4 @@ pandas
 fitter
 seaborn
 pytorch_lightning
+accelerate

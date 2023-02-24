@@ -15,7 +15,7 @@ if __name__ == "__main__":
         rand_emb = rand_list[i]
         rand_emb = rand_emb.to(device='cuda')
         for seed in seeds:
-            pil_image = ldm.embedding_2_img('', rand_emb, seed=seed, save_int=False)
+            pil_image = ldm.embedding_2_img('', rand_emb, seed=seed, save_img=False)
             pil_image.save(f'./output/rand_emb/{i}/{seed}_{i}.jpg')
 
             predictions.append(aesthetic_predictor.predict_aesthetic_score(pil_image))
