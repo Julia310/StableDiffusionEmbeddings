@@ -142,7 +142,11 @@ class StableDiffusion:
             inp = self.scheduler.scale_model_input(torch.cat([latents] * 2), ts)
 
             # Predicting noise residual using U-Net
-            u, t = self.unet(inp, ts, encoder_hidden_states=emb).sample.chunk(2)
+            if i < steps-1:
+                with torch.no_grad():
+                    u, t = self.unet(inp, ts, encoder_hidden_states=emb).sample.chunk(2)
+            else:
+                u, t = self.unet(inp, ts, encoder_hidden_states=emb).sample.chunk(2)
 
             # Performing Guidance
             pred = u + g * (t - u)
