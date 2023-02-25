@@ -58,14 +58,22 @@ class MLP(pl.LightningModule):
         return optimizer
 
 
-def normalized(a, return_l2 = False, axis=-1, order=2):
+'''def normalized(a, return_l2 = False, axis=-1, order=2):
     import numpy as np  # pylint: disable=import-outside-toplevel
 
     l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
     l2[l2 == 0] = 1
     if return_l2:
         return np.expand_dims(l2, axis)
-    return a / np.expand_dims(l2, axis)
+    return a / np.expand_dims(l2, axis)'''
+
+def normalized(a, return_l2=False, axis=-1, order=2):
+    l2 = torch.norm(a, dim=axis, p=order, keepdim=True)
+    l2_zeros = torch.zeros_like(l2)
+    l2 = torch.where(l2 == 0, l2_zeros + 1, l2)
+    if return_l2:
+        return l2
+    return a / l2
 
 
 class AestheticPredictor:
@@ -78,7 +86,7 @@ class AestheticPredictor:
 
     def initialize_mlp(self):
         mlp = MLP(self.embedding_dim)  #
-        print(os.path.abspath('sac+logos+ava1-l14-linearMSE.pth'))
+        print(os.path.abspath('./aesthetic_predictor/sac+logos+ava1-l14-linearMSE.pth'))
         # load the mlp you trained previously or the mlp available in this repo
         s = torch.load("./aesthetic_predictor/sac+logos+ava1-l14-linearMSE.pth")
         mlp.load_state_dict(s)
@@ -103,8 +111,9 @@ class AestheticPredictor:
         else:
             features = input
         if normalize:
-            features = normalized(features.cpu().detach().numpy())
-            features = torch.from_numpy(features).to(self.device)
+            #features = normalized(features.cpu().detach().numpy())
+            features = normalized(features)
+            #features = torch.from_numpy(features).to(self.device)
             if self.device == 'cuda': features = features.type(torch.cuda.FloatTensor)
             else: features = features.type(torch.FloatTensor)
         return features
