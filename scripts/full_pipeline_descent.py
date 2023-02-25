@@ -41,6 +41,7 @@ class GradientDescent(torch.nn.Module):
 
         image = preprocess(image)#.unsqueeze(0)
         image_embedding = aesthetic_predictor.clip.encode_image(image).float()
+        image_embedding = aesthetic_predictor.get_features(image_embedding, image_input=False)
         score = aesthetic_predictor.mlp(image_embedding).squeeze()
         print(score)
 
@@ -71,8 +72,4 @@ if __name__ == '__main__':
             text_embedding = text_embedding + eta * grad  # gradient ascent
         text_embedding.requires_grad = True
         #emb_list.append(text_embedding)
-        ldm.embedding_2_img(f'{i+1}_{prompt}', text_embedding, dim=dim, save_img=True)
-
-
-
-
+        #ldm.embedding_2_img(f'{i+1}_{prompt}', text_embedding, dim=dim, save_img=True)
