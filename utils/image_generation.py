@@ -1,28 +1,8 @@
-import matplotlib.pyplot as plt
 import random
-import os
-import csv
-import pandas as pd
 import requests
+import pandas as pd
 import torch
 from torch import normal, randn
-
-
-def create_boxplot(values, prompt_aesthetics=None, filename=None):
-    # Create the figure and boxplot
-    fig, ax = plt.subplots()
-    bp = ax.boxplot(values)
-
-    # Add the mean as an empty dot to the plot
-    if prompt_aesthetics is not None:
-        ax.scatter([1], [prompt_aesthetics], marker='o', color='blue', s=50)
-
-    # Save the figure to disk if a filename is provided
-    if filename is not None:
-        print(f'save {filename}')
-        plt.savefig(filename)
-
-    return fig
 
 
 def get_random_seeds(num_seeds):
@@ -34,21 +14,7 @@ def get_random_seeds(num_seeds):
     return seeds
 
 
-def write_to_csv(csv_rows, filename, file_path, seed=None):
-    if not seed is None:
-        file_path = f'{file_path}{seed}/' + filename
-    else:
-        file_path = f'{file_path}' + filename
-    if os.path.exists(file_path):
-        os.remove(file_path)
-    with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, escapechar='\\')
-        for row in csv_rows:
-            writer.writerow(row)
-            csvfile.flush()
-
-
-def retrieve_prompts(keyword = ""):
+def retrieve_prompts(keyword=""):
     url = f'https://lexica.art/api/v1/search?q="{keyword}"'
 
     s = requests.Session()
@@ -59,15 +25,7 @@ def retrieve_prompts(keyword = ""):
     return df['input']
 
 
-def make_dir(path, seed = None):
-    if not os.path.exists(path):
-        os.mkdir(path)
-    if not seed is None:
-        if not os.path.exists(f'{path}/{seed}'):
-            os.mkdir(f'{path}/{seed}')
-
-
-def create_random_prompts(num_prompts, numeric = False, random_prompt_len = False):
+def create_random_prompts(num_prompts, numeric=False, random_prompt_len=False):
     # Create a string of all possible characters
     all_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     if numeric:
@@ -95,11 +53,11 @@ def create_random_prompts(num_prompts, numeric = False, random_prompt_len = Fals
     return prompts
 
 
-def sample_noise(shape, num = 1):
+def sample_noise(shape, num=1):
     sample_list = list()
     while len(sample_list) < num:
         sample = randn(size=shape, dtype=torch.float16)
-        #sample = normal(mean=mean, std=std, size=shape)
+        # sample = normal(mean=mean, std=std, size=shape)
         sample_list.append(sample)
 
     return sample_list

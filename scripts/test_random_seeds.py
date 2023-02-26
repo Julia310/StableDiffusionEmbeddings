@@ -1,6 +1,8 @@
 from ldm.stable_diffusion import StableDiffusion
 from aesthetic_predictor.simple_inference import AestheticPredictor
-from utils import create_boxplot, get_random_seeds, create_random_prompts, make_dir
+from utils.file_utils import make_dir
+from utils.create_graphics import create_boxplot
+from utils.image_generation import get_random_seeds, create_random_prompts
 
 prompts = ["Cute small humanoid bat sitting in a movie theater eating popcorn watching a movie ,unreal engine, cozy " \
          "indoor lighting, artstation, detailed, digital painting,cinematic,character design by mark ryden and pixar " \

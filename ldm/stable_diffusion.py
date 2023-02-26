@@ -5,7 +5,7 @@ from tqdm import tqdm
 import os
 from PIL import Image
 from torchvision import transforms as tfms
-from utils import sample_noise
+from utils.image_generation import sample_noise
 
 
 class StableDiffusion:

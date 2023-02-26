@@ -1,5 +1,6 @@
 from aesthetic_predictor.simple_inference import AestheticPredictor
-from utils import create_random_prompts, create_boxplot, retrieve_prompts
+from utils.image_generation import create_random_prompts, retrieve_prompts
+from utils.create_graphics import create_boxplot
 
 
 def test_prompts():

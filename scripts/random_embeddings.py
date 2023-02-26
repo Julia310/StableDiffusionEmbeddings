@@ -1,4 +1,6 @@
-from utils import sample_noise, get_random_seeds, create_boxplot, make_dir
+from utils.file_utils import make_dir
+from utils.image_generation import sample_noise, get_random_seeds
+from utils.create_graphics import create_boxplot
 from ldm.stable_diffusion import StableDiffusion
 from aesthetic_predictor.simple_inference import AestheticPredictor
 

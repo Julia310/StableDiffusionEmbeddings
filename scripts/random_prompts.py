@@ -1,6 +1,8 @@
 from ldm.stable_diffusion import StableDiffusion
 from aesthetic_predictor.simple_inference import AestheticPredictor
-from utils import get_random_seeds, write_to_csv, make_dir, create_random_prompts, create_boxplot
+from utils.file_utils import write_to_csv, make_dir
+from utils.create_graphics import create_boxplot
+from utils.image_generation import get_random_seeds, create_random_prompts
 
 
 def random_prompts():
