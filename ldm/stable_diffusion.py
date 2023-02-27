@@ -38,13 +38,15 @@ class StableDiffusion:
         else:
             return text_encoded.half()
 
-    def latents_to_pil(self, latents):
+    def latents_to_image(self, latents, return_pil = True):
         '''
         Function to convert latents to images
         '''
         latents = (1 / 0.18215) * latents
-        with torch.no_grad():
-            image = self.vae.decode(latents).sample
+        #with torch.no_grad():
+        image = self.vae.decode(latents).sample
+        if not return_pil:
+            return torch.clamp(image, -1.0, 1.0)
 
         image = (image / 2 + 0.5).clamp(0, 1)
         image = image.detach().cpu().permute(0, 2, 3, 1).numpy()
@@ -156,7 +158,7 @@ class StableDiffusion:
 
         if not return_pil: return latents
 
-        pil_image = self.latents_to_pil(latents)[0]
+        pil_image = self.latents_to_image(latents)[0]
 
         # Saving image
         if save_img:
