@@ -23,7 +23,7 @@ class ImageImprovement:
 
     def improve_features(self, condition_dim):
         tensor = condition_dim.clone()
-        im_features = self.gradient_ascent.get_gradient(tensor, text_input=False, image_input=False)
+        im_features = self.gradient_ascent.get_perturbated_features(tensor, text_input=False, image_input=False)
         normalization = self.gradient_ascent.get_feature_normalization(tensor)
         im_features = torch.from_numpy(im_features.cpu().detach().numpy() * normalization).cuda()
         return im_features

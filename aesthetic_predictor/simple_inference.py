@@ -105,7 +105,7 @@ class AestheticPredictor:
             else:
                 return self.clip.encode_image(input)
 
-    def get_normalized_features(self, input, text_input = False, image_input = True, normalize = True):
+    def get_features(self, input, text_input = False, image_input = True, normalize = True):
         if text_input or image_input:
             features = self.encode_input(input, image_input)
         else:
@@ -120,7 +120,7 @@ class AestheticPredictor:
 
     def predict_aesthetic_score(self, input, image_input = True):
         text_input = not image_input
-        features = self.get_normalized_features(input, text_input=text_input, image_input=image_input)
+        features = self.get_features(input, text_input=text_input, image_input=image_input)
         prediction = self.mlp(features)
 
         print("Aesthetic score predicted by the mlp:")

@@ -7,7 +7,7 @@ class Gradient_Ascent:
     def __init__(self):
         self.epsilon = 0.25
         self.num_steps = 5
-        self.alpha = 0.005
+        self.alpha = 0.001
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.y_target = torch.tensor([9.0]).to(self.device).view(1, 1)
         self.aestethetic_pred = AestheticPredictor()
@@ -24,10 +24,11 @@ class Gradient_Ascent:
         # Return the perturbed image
         return perturbed_image
 
-    def get_gradient(self, input, text_input = False, image_input = True):
+    def get_perturbated_features(self, input, text_input = False, image_input = True):
         #image_features = self.aestethetic_pred.pil_to_features(predict_aesthetic_score)
         features = self.aestethetic_pred.get_features(input, text_input, image_input)
-        features.requires_grad = True
+        features = features.clone().detach().requires_grad_(True)
+        #features.requires_grad = True
         output = self.mlp(features)
         print(output)
         #loss = self.mse_loss(output, self.y_target)
