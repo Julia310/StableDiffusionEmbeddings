@@ -2,20 +2,24 @@ from ldm.stable_diffusion import StableDiffusion
 import torch
 from aesthetic_predictor.simple_inference import AestheticPredictor
 from torchvision.transforms import CenterCrop, Resize, Normalize, InterpolationMode
+from optimizer.adam_on_lion import AdamOnLion
 
+seed = 61582
+dim = 512
 
-seed=61582
-dim=512
-
-device='cuda'
+device = 'cuda'
 
 ldm = StableDiffusion(device=device)
 aesthetic_predictor = AestheticPredictor(device=device)
 
+prompt1 = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
+         'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 
 
-prompt = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
-               'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
+prompt2 = "ugly meme, funniest thing ever"
+prompt3 = "a dad angry at missing his flight from prague to nyc, the dad is drunk "
+
+#prompts = [prompt1, prompt2, prompt3]
 
 
 def preprocess(rgb):
@@ -26,20 +30,18 @@ def preprocess(rgb):
 
 
 class GradientDescent(torch.nn.Module):
+    def __init__(self, text_embedding):
+        super().__init__()
+        self.text_embedding = torch.nn.Parameter(text_embedding)
+        self.text_embedding.requires_grad = True
+        self.latents = None
 
-    def forward(self, text_embedding, g=7.5, steps=70):
-        latents = ldm.embedding_2_img('', text_embedding, dim=dim, seed=seed, return_pil=False, g=g, steps=steps)
-        latents = (1 / 0.18215) * latents
+    def forward(self, g=7.5, steps=70):
+        latents = ldm.embedding_2_img('', self.text_embedding, dim=dim, seed=seed, return_pil=False, g=g, steps=steps)
+        self.latents = latents
+        image = ldm.latents_to_image(latents, return_pil=False)
 
-        image = ldm.vae.decode(latents).sample
-        #print(image)
-
-        image = image.clamp(-1, 1)
-        #image = (image / 2 + 0.5).clamp(0, 1)
-        #image = image.permute(0, 2, 3, 1)
-        #image = (image * 255)
-
-        image = preprocess(image)#.unsqueeze(0)
+        image = preprocess(image)
         image_embedding = aesthetic_predictor.clip.encode_image(image).float()
         image_embedding = aesthetic_predictor.get_features(image_embedding, image_input=False)
         score = aesthetic_predictor.mlp(image_embedding).squeeze()
@@ -47,29 +49,46 @@ class GradientDescent(torch.nn.Module):
 
         return score
 
+    def get_optimizer(self, optim='SGD'):
+        if optim == 'SGD':
+            return torch.optim.SGD(
+                self.parameters(),
+                lr=eta,
+                momentum=0.95,
+                nesterov=True
+            )
+        elif optim == 'AdamTorch':
+            return torch.optim.Adam(
+                self.parameters(),
+                lr=eta,
+                #amsgrad=True,
+                weight_decay=0.5
+            )
+        else:
+            return AdamOnLion(
+                params=gradient_descent.parameters(),
+                lr=eta,
+            )
+
 
 if __name__ == '__main__':
-    eta = 0.1
+    prompt = prompt1
+    gradient_descent = GradientDescent(ldm.get_embedding([prompt])[0])
 
-    emb_list = list()
+    eta = 0.01
+    num_images = 700
 
-    gradient_descent = GradientDescent()
-    with torch.no_grad():
-        text_embedding = ldm.get_embedding([prompt])[0]
-    text_embedding.requires_grad = True
-    """optimizer = torch.optim.Adam(
-        (text_embedding,), lr=eta, maximize=True
-    )"""
+    optimizer = gradient_descent.get_optimizer('AdamOnLion')
 
-    for i in range(100):
-        #text_embedding = text_embedding + eta * grad # gradient ascent
-        #optimizer.zero_grad()
-        loss = gradient_descent.forward(text_embedding, steps=70)
+
+    for i in range(num_images):
+        optimizer.zero_grad()
+        output = gradient_descent.forward(steps=70)
+        loss = -output
         loss.backward()
-        grad = text_embedding.grad.data
-        #optimizer.step()
-        with torch.no_grad():
-            text_embedding = text_embedding + eta * grad  # gradient ascent
-        text_embedding.requires_grad = True
-        #emb_list.append(text_embedding)
-        #ldm.embedding_2_img(f'{i+1}_{prompt}', text_embedding, dim=dim, save_img=True)
+        optimizer.step()
+        gradient = gradient_descent.text_embedding.grad
+        #print(gradient_descent.text_embedding)
+        #print(gradient)
+        pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
+        pil_image.save(f'output/{i}_{prompt[0:45]}_{output.item()}.jpg')
