@@ -49,7 +49,7 @@ class GradientDescent(torch.nn.Module):
 
         return score
 
-    def get_optimizer(self, optim='SGD'):
+    def get_optimizer(self, eta, optim='SGD'):
         if optim == 'SGD':
             return torch.optim.SGD(
                 self.parameters(),
@@ -60,25 +60,25 @@ class GradientDescent(torch.nn.Module):
         elif optim == 'AdamTorch':
             return torch.optim.Adam(
                 self.parameters(),
-                lr=eta,
-                #amsgrad=True,
-                weight_decay=0.5
+                lr=eta
+                #eps=0.00000001
             )
         else:
             return AdamOnLion(
                 params=gradient_descent.parameters(),
-                lr=eta,
+                lr=eta
+                #eps=0.00001
             )
 
 
 if __name__ == '__main__':
-    prompt = prompt1
+    prompt = prompt2
     gradient_descent = GradientDescent(ldm.get_embedding([prompt])[0])
 
     eta = 0.01
-    num_images = 700
+    num_images = 500
 
-    optimizer = gradient_descent.get_optimizer('AdamOnLion')
+    optimizer = gradient_descent.get_optimizer(eta, 'AdamOnLion')
 
 
     for i in range(num_images):
