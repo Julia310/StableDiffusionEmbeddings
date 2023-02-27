@@ -1,6 +1,5 @@
 from scipy.stats import anderson, kstest
 import scipy.stats
-import seaborn as sns
 import matplotlib.pyplot as plt
 from utils.file_utils import make_dir
 from utils.image_generation import retrieve_prompts, create_random_prompts
@@ -83,12 +82,6 @@ def ks_test(data, distribution = 'norm'):
         print(f'{distribution}')
     else:
         print(f'not {distribution}')
-
-
-def plot_histogram(data, path, prompt):
-    sns.histplot(data, kde=True)
-    make_dir(path)
-    plt.savefig(f'{path}/{prompt[0:30]}.png')
 
 
 def fit_distribution(data):

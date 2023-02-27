@@ -1,4 +1,13 @@
 import matplotlib.pyplot as plt
+import seaborn as sns
+from utils.file_utils import make_dir
+
+
+def plot_histogram(data, path, prompt):
+    sns.histplot(data, kde=True)
+    make_dir(path)
+    plt.savefig(f'{path}/{prompt[0:30]}.png')
+
 
 def create_boxplot(values, prompt_aesthetics=None, filename=None):
     # Create the figure and boxplot

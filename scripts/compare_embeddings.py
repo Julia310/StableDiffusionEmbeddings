@@ -67,7 +67,7 @@ def compare_tensors(tensor1, tensor2, comparison = 1):
 def compare_clip_embeddings(comparison = 3):
     aesthetic_predictor = AestheticPredictor()
     emb_1 = get_clip_embedding([prompt])
-    emb_2 = aesthetic_predictor.get_normalized_features(input=prompt, text_input = True, image_input=False, normalize=False)
+    emb_2 = aesthetic_predictor.get_features(input=prompt, text_input = True, image_input=False, normalize=False)
     print(compare_tensors(emb_1, emb_2, comparison))
     print('')
 
@@ -120,7 +120,7 @@ def test_embedding(comparison = 1):
 def test_embedding(comparison = 1):
     aesthetic_predictor = AestheticPredictor()
     emb_1 = get_clip_embedding([prompt]).to("cpu").detach().numpy().astype('float')
-    emb_2 = aesthetic_predictor.get_normalized_features(input=prompt, text_input=True, image_input=False, normalize=False)
+    emb_2 = aesthetic_predictor.get_features(input=prompt, text_input=True, image_input=False, normalize=False)
     emb_2 = emb_2.to("cpu").detach().numpy().astype('float')
     equal_dims = list()
     similar_values = list()
