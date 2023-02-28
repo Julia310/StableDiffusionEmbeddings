@@ -66,13 +66,13 @@ class GradientDescent(torch.nn.Module):
         else:
             return AdamOnLion(
                 params=gradient_descent.parameters(),
-                lr=eta
-                #eps=0.00001
+                lr=eta,
+                eps=0.001
             )
 
 
 if __name__ == '__main__':
-    prompt = prompt2
+    prompt = prompt1
     gradient_descent = GradientDescent(ldm.get_embedding([prompt])[0])
 
     eta = 0.01
@@ -80,15 +80,11 @@ if __name__ == '__main__':
 
     optimizer = gradient_descent.get_optimizer(eta, 'AdamOnLion')
 
-
     for i in range(num_images):
         optimizer.zero_grad()
         output = gradient_descent.forward(steps=70)
-        loss = -output
+        loss = output
         loss.backward()
         optimizer.step()
-        gradient = gradient_descent.text_embedding.grad
-        #print(gradient_descent.text_embedding)
-        #print(gradient)
         pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
         pil_image.save(f'output/{i}_{prompt[0:45]}_{output.item()}.jpg')
