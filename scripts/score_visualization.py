@@ -1,12 +1,10 @@
 import os
-
 import torch
-
 from utils.create_graphics import plot_aesthetic_scores
 from aesthetic_predictor.gradient_ascent import Gradient_Ascent
 from aesthetic_predictor.simple_inference import AestheticPredictor
 
-prompt = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
+prompt1 = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
          'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 
 
@@ -21,10 +19,10 @@ def visualize_aesthetic_scores(folder_path, prompt):
     tuple_list = [(int(x), float(y)) for x, y in tuple_list]
     tuple_list.sort(key=lambda x: x[0])
     scores_list = [y for x, y in tuple_list]
-    plot_aesthetic_scores(scores_list, save_dir=f'./output/{prompt[0:20]}.png')
+    plot_aesthetic_scores(scores_list, save_dir=f'./output/Adam_{prompt[0:20]}_2.png')
 
 
-def get_aesthetic_scores(prompt, num_iterations = 700):
+def get_aesthetic_scores(prompt, num_iterations = 150):
     scores = list()
     ga = Gradient_Ascent()
     aesthetic_predictor = AestheticPredictor()
@@ -39,9 +37,9 @@ def get_aesthetic_scores(prompt, num_iterations = 700):
 
 
 if __name__ == "__main__":
-    folder_path = './output/normalized/prompt3'
-    visualize_aesthetic_scores(folder_path, prompt3)
-    #scores = get_aesthetic_scores(prompt3)
-    #plot_aesthetic_scores(scores, save_dir=f'./output/{prompt3[0:20]}_mlp_only.png')
+    #folder_path = './output/adamOnLion/prompt1_2'
+    #visualize_aesthetic_scores(folder_path, prompt1)
+    scores = get_aesthetic_scores(prompt3)
+    plot_aesthetic_scores(scores, save_dir=f'./output/{prompt1[0:20]}_mlp_only.png')
 
 
