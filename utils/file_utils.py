@@ -2,7 +2,6 @@ import os
 import csv
 
 
-
 def write_to_csv(csv_rows, filename, file_path, seed=None):
     if not seed is None:
         file_path = f'{file_path}{seed}/' + filename
