@@ -49,7 +49,8 @@ class AdamOnLion(Optimizer):
         m_ = m_adam.clone().div_(1 - beta1**step)
         v_ = v_adam.clone().div_(1 - beta2**step)
 
-        v_[v_ == 0.0] = 1e-7
+        #v_ = torch.add(v_, 1e-7)
+        #v_[v_ == 0.0] = 1e-7
 
         # weight update
         adam_update = m_.div_(v_.sqrt().add_(eps))
@@ -59,7 +60,6 @@ class AdamOnLion(Optimizer):
         p.add_(update, alpha = -lr)
 
         # decay the momentum running average coefficient
-
         m_lion.mul_(gamma2).add_(grad, alpha = 1 - gamma2)
 
     @torch.no_grad()
