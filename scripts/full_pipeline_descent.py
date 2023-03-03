@@ -19,6 +19,10 @@ prompt1 = 'a beautiful painting of a peaceful lake in the Land of the Dreams, fu
 prompt2 = "ugly meme, funniest thing ever"
 prompt3 = "a dad angry at missing his flight from prague to nyc, the dad is drunk "
 
+prompt4 = "Cute small humanoid bat sitting in a movie theater eating popcorn watching a movie ,unreal engine, cozy " \
+         "indoor lighting, artstation, detailed, digital painting,cinematic,character design by mark ryden and pixar " \
+         "and hayao miyazaki, unreal 5, daz, hyperrealistic, octane render"
+
 #prompts = [prompt1, prompt2, prompt3]
 
 
@@ -72,18 +76,18 @@ class GradientDescent(torch.nn.Module):
 
 
 if __name__ == '__main__':
-    prompt = prompt1
+    prompt = prompt4
     gradient_descent = GradientDescent(ldm.get_embedding([prompt])[0])
 
     eta = 0.01
-    num_images = 500
+    num_images = 1000
 
     optimizer = gradient_descent.get_optimizer(eta, 'AdamOnLion')
 
     for i in range(num_images):
         optimizer.zero_grad()
         output = gradient_descent.forward(steps=70)
-        loss = output
+        loss = -output
         loss.backward()
         optimizer.step()
         pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
