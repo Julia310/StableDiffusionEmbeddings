@@ -3,6 +3,7 @@ import torch
 from aesthetic_predictor.simple_inference import AestheticPredictor
 from torchvision.transforms import CenterCrop, Resize, Normalize, InterpolationMode
 from optimizer.adam_on_lion import AdamOnLion
+from torch.nn import functional as F
 
 seed = 61582
 dim = 512
@@ -16,12 +17,12 @@ prompt1 = 'a beautiful painting of a peaceful lake in the Land of the Dreams, fu
          'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 
 
-prompt2 = "ugly meme, funniest thing ever"
-prompt3 = "a dad angry at missing his flight from prague to nyc, the dad is drunk "
+#prompt2 = "ugly meme, funniest thing ever"
+#prompt3 = "a dad angry at missing his flight from prague to nyc, the dad is drunk "
 
-prompt4 = "Cute small humanoid bat sitting in a movie theater eating popcorn watching a movie ,unreal engine, cozy " \
-         "indoor lighting, artstation, detailed, digital painting,cinematic,character design by mark ryden and pixar " \
-         "and hayao miyazaki, unreal 5, daz, hyperrealistic, octane render"
+#prompt4 = "Cute small humanoid bat sitting in a movie theater eating popcorn watching a movie ,unreal engine, cozy " \
+#         "indoor lighting, artstation, detailed, digital painting,cinematic,character design by mark ryden and pixar " \
+#         "and hayao miyazaki, unreal 5, daz, hyperrealistic, octane render"
 
 #prompts = [prompt1, prompt2, prompt3]
 
@@ -127,7 +128,7 @@ class GradientDescent(torch.nn.Module):
 
 
 if __name__ == '__main__':
-    prompt = prompt4
+    prompt = prompt1
     gradient_descent = GradientDescent(ldm.get_embedding([prompt])[0])
 
     eta = 0.01
