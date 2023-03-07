@@ -26,6 +26,57 @@ prompt4 = "Cute small humanoid bat sitting in a movie theater eating popcorn wat
 #prompts = [prompt1, prompt2, prompt3]
 
 
+def compute_blurriness(image):
+    # Convert the image to grayscale
+    gray_image = 0.2989 * image[:, 0, :, :] + 0.5870 * image[:, 1, :, :] + 0.1140 * image[:, 2, :, :]
+
+    # Compute the Laplacian filter
+    laplacian_filter = torch.tensor([[0, 1, 0], [1, -4, 1], [0, 1, 0]])
+    laplacian_filter = laplacian_filter.to(gray_image.device).to(gray_image.dtype)
+
+    # Apply the Laplacian filter to the grayscale image
+    filtered_image = F.conv2d(gray_image.unsqueeze(0), laplacian_filter.unsqueeze(0).unsqueeze(0))
+
+    # Compute the variance of the Laplacian filter response
+    variance = torch.var(filtered_image)
+
+    return variance
+
+
+def compute_metric(image):
+    # Convert the image to grayscale
+    gray_image = 0.2989 * image[:, 0, :, :] + 0.5870 * image[:, 1, :, :] + 0.1140 * image[:, 2, :, :]
+
+    # Compute the Laplacian filter
+    #laplacian_filter = torch.tensor([[1.0/9, 1.0/9, 1.0/9], [1.0/9, 1.0/9, 1.0/9], [1.0/9, 1.0/9, 1.0/9]])
+    laplacian_filter = torch.tensor([[1, 2, 1], [2, 4, 2], [1, 2, 1]])
+    laplacian_filter = laplacian_filter.to(gray_image.device).to(gray_image.dtype)
+
+    # Apply the Laplacian filter to the grayscale image
+    filtered_image = F.conv2d(gray_image.unsqueeze(0), laplacian_filter.unsqueeze(0).unsqueeze(0))
+
+    # Compute the variance of the Laplacian filter response
+    variance = torch.var(filtered_image)
+
+    return variance
+
+
+def grayscale(image):
+    score = - torch.mean(torch.std(image, dim=1)) * 100
+    return score
+
+
+def compute_colorfulness(image):
+    # Compute the mean and standard deviation of the RGB channels
+    mean = torch.mean(image, dim=(2, 3))
+    std = torch.std(image, dim=(2, 3))
+
+    # Compute the colorfulness metric
+    colorfulness = torch.sum(std) / (3 * torch.mean(mean))
+
+    return colorfulness
+
+
 def preprocess(rgb):
     rgb = Resize(size=224, interpolation=InterpolationMode.BICUBIC, max_size=None, antialias=None)(rgb)
     rgb = CenterCrop(size=(224, 224))(rgb)
