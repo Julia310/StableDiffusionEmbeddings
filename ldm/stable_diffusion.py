@@ -110,14 +110,8 @@ class StableDiffusion:
 
         cov = self.get_cov(X, Y)
 
-        #return X + Y
-
-        #print(f'embedding1, std: {torch.std(embedding1).item()}, mean: {torch.mean(embedding1).item()}')
-        #print(f'embedding1, std: {torch.std(embedding2).item()}, mean: {torch.mean(embedding2).item()}')
-
-        Z = (X + Y) * torch.sqrt(torch.std(embedding1) * torch.std(embedding2)) / (torch.sqrt(torch.std(X) ** 2 + torch.std(Y) ** 2 + 2 * cov) + 1e-14 )
-        #print(torch.std(Z))
-        #print(torch.mean(Z))
+        Z = (X + Y) * torch.sqrt(torch.std(embedding1) * torch.std(embedding2)) \
+            / (torch.sqrt(torch.std(X) ** 2 + torch.std(Y) ** 2 + 2 * cov) + 1e-14)
         return Z
     def set_initial_latents(self, dim):
         latents = torch.randn((1, self.unet.in_channels, dim // 8, dim // 8))
