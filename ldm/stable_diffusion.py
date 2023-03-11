@@ -112,9 +112,13 @@ class StableDiffusion:
 
         #return X + Y
 
-        return (X + Y) / (
-                torch.sqrt(torch.std(X) ** 2 + torch.std(Y) ** 2) + 1e-14 + 2 * cov)
+        #print(f'embedding1, std: {torch.std(embedding1).item()}, mean: {torch.mean(embedding1).item()}')
+        #print(f'embedding1, std: {torch.std(embedding2).item()}, mean: {torch.mean(embedding2).item()}')
 
+        Z = (X + Y) * torch.sqrt(torch.std(embedding1) * torch.std(embedding2)) / (torch.sqrt(torch.std(X) ** 2 + torch.std(Y) ** 2 + 2 * cov) + 1e-14 )
+        #print(torch.std(Z))
+        #print(torch.mean(Z))
+        return Z
     def set_initial_latents(self, dim):
         latents = torch.randn((1, self.unet.in_channels, dim // 8, dim // 8))
 
@@ -125,7 +129,7 @@ class StableDiffusion:
             latents = latents.to(self.device).half() * self.scheduler.init_noise_sigma
         return latents
 
-    def embedding_2_img(self, prompt, emb, return_pil=True, dim=512, g=7.5, seed=61582, steps=70, save_img=True):
+    def embedding_2_img(self, prompt, emb, keep_init_latents = True, return_pil=True, dim=512, g=7.5, seed=61582, steps=70, save_img=True):
         """
         Diffusion process to convert input to image
         """
@@ -134,6 +138,8 @@ class StableDiffusion:
 
         # Setting number of steps in scheduler
         self.scheduler.set_timesteps(steps)
+
+        if not keep_init_latents: self.initial_latents = None
 
         if self.initial_latents is None: self.initial_latents = self.set_initial_latents(dim=dim)
         latents = torch.clone(self.initial_latents)
