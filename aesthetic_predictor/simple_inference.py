@@ -58,15 +58,6 @@ class MLP(pl.LightningModule):
         return optimizer
 
 
-'''def normalized(a, return_l2 = False, axis=-1, order=2):
-    import numpy as np  # pylint: disable=import-outside-toplevel
-
-    l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
-    l2[l2 == 0] = 1
-    if return_l2:
-        return np.expand_dims(l2, axis)
-    return a / np.expand_dims(l2, axis)'''
-
 def normalized(a, return_l2=False, axis=-1, order=2):
     l2 = torch.norm(a, dim=axis, p=order, keepdim=True)
     l2_zeros = torch.zeros_like(l2)

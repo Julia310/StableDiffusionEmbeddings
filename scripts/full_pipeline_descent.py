@@ -140,7 +140,7 @@ if __name__ == '__main__':
     score = 0
     cnt = 0
     #for i in range(num_images):
-    while score < 6.93 and cnt < 320 or score < 7.0:
+    while score < 6.93 and cnt < 350 or score < 7.1:
         optimizer.zero_grad()
         score = gradient_descent.forward(steps=70)
         loss = -score

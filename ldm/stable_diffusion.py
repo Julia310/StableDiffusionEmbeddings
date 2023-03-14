@@ -1,4 +1,4 @@
-from transformers import CLIPTextModel, CLIPTokenizer
+from transformers import CLIPTextModel, CLIPTokenizer, CLIPImageProcessor, CLIPVisionModel
 import torch
 from diffusers import UNet2DConditionModel, LMSDiscreteScheduler, AutoencoderKL
 from tqdm import tqdm
@@ -24,11 +24,13 @@ class StableDiffusion:
         self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=self.dtype)
         self.text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14",
                                                           torch_dtype=self.dtype).to(self.device)
+        #self.image_processor = CLIPImageProcessor.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=self.dtype)
+        #self.image_encoder = CLIPVisionModel.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=self.dtype).to(self.device)
         self.initial_latents = None
 
     def text_enc(self, prompts, maxlen=None):
         '''
-        A function to take a texual promt and convert it into embeddings
+        A function to take a texual prompt and convert it into embeddings
         '''
         if maxlen is None: maxlen = self.tokenizer.model_max_length
         inp = self.tokenizer(prompts, padding="max_length", max_length=maxlen, truncation=True, return_tensors="pt")
