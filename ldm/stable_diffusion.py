@@ -82,7 +82,6 @@ class StableDiffusion:
 
         return embedding_list
 
-
     def random_embedding(self, shape, std, mean, num):
         embedding_list = list()
         for i in range(num):
@@ -93,7 +92,6 @@ class StableDiffusion:
             embedding_list.append(emb)
 
         return embedding_list
-
 
     def get_cov(self, X, Y):
         mean_X = torch.mean(X)
@@ -115,6 +113,7 @@ class StableDiffusion:
         Z = (X + Y) * torch.sqrt(torch.std(embedding1) * torch.std(embedding2)) \
             / (torch.sqrt(torch.std(X) ** 2 + torch.std(Y) ** 2 + 2 * cov) + 1e-14)
         return Z
+
     def set_initial_latents(self, dim):
         latents = torch.randn((1, self.unet.in_channels, dim // 8, dim // 8))
 
@@ -161,7 +160,6 @@ class StableDiffusion:
             if return_latents and i == steps-1:
             #if return_latents and i == 0:
                 return latents
-
 
         if not return_pil: return latents
 
