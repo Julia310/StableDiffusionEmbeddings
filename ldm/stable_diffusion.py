@@ -115,6 +115,7 @@ class StableDiffusion:
         Z = (X + Y) * torch.sqrt(torch.std(embedding1) * torch.std(embedding2)) \
             / (torch.sqrt(torch.std(X) ** 2 + torch.std(Y) ** 2 + 2 * cov) + 1e-14)
         return Z
+
     def set_initial_latents(self, dim):
         latents = torch.randn((1, self.unet.in_channels, dim // 8, dim // 8))
 
@@ -124,6 +125,20 @@ class StableDiffusion:
         else:
             latents = latents.to(self.device).half() * self.scheduler.init_noise_sigma
         return latents
+
+    def slerp(self, latents1, latents2, val):
+        low_norm = latents1 / torch.norm(latents1, dim=1, keepdim=True)
+        high_norm = latents2 / torch.norm(latents2, dim=1, keepdim=True)
+        dot = (low_norm * high_norm).sum(1)
+
+        if dot.mean() > 0.9995:
+            return latents1 * val + latents2 * (1 - val)
+
+        omega = torch.acos(dot)
+        so = torch.sin(omega)
+        res = (torch.sin((1.0 - val) * omega) / so).unsqueeze(1) * latents1 + (torch.sin(val * omega) / so).unsqueeze(
+            1) * latents2
+        return res
 
     def embedding_2_img(self, prompt, emb, keep_init_latents = True, return_pil=True, dim=512, g=7.5, seed=61582, steps=70, save_img=True):
         """
