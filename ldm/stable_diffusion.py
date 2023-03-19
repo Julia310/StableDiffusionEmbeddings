@@ -114,6 +114,20 @@ class StableDiffusion:
             / (torch.sqrt(torch.std(X) ** 2 + torch.std(Y) ** 2 + 2 * cov) + 1e-14)
         return Z
 
+    def slerp(self, latents1, latents2, val):
+        low_norm = latents1 / torch.norm(latents1, dim=1, keepdim=True)
+        high_norm = latents2 / torch.norm(latents2, dim=1, keepdim=True)
+        dot = (low_norm * high_norm).sum(1)
+
+        if dot.mean() > 0.9995:
+            return latents1 * val + latents2 * (1 - val)
+
+        omega = torch.acos(dot)
+        so = torch.sin(omega)
+        res = (torch.sin((1.0 - val) * omega) / so).unsqueeze(1) * latents1 + (torch.sin(val * omega) / so).unsqueeze(
+            1) * latents2
+        return res
+
     def set_initial_latents(self, dim):
         latents = torch.randn((1, self.unet.in_channels, dim // 8, dim // 8))
 
