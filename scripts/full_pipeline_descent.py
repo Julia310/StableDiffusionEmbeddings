@@ -112,7 +112,7 @@ if __name__ == '__main__':
     gd = GradientDescent(ldm.text_enc([prompt]), target_latents, combined_init_latents)
 
     eta = 0.01
-    num_images = 600
+    num_images = 1000
 
     optimizer = gd.get_optimizer(eta, 'AdamOnLion')
     update_steps = 0

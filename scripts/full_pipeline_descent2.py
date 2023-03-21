@@ -15,34 +15,29 @@ prompt = 'a beautiful painting of a peaceful lake in the Land of the Dreams, ful
          'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 
 
-def get_shifted_embedding(text_embedding, default_std, default_mean):
-    shifted_text_embedding = text_embedding / (torch.std(text_embedding)) * default_std
-    shifted_text_embedding = shifted_text_embedding - torch.mean(shifted_text_embedding) + default_mean
-    return shifted_text_embedding
-
-
 class GradientDescent(torch.nn.Module):
-    def __init__(self, text_embedding, target_latents, comb_init_latents):
+    def __init__(self, condition, target_latents, comb_init_latents):
         super().__init__()
-        self.text_embedding = torch.nn.Parameter(text_embedding)
-        self.text_embedding.requires_grad = True
+        self.condition = torch.nn.Parameter(condition)
+        self.condition.requires_grad = True
+        self.uncondition = ldm.text_enc([""], self.condition.shape[1])
         self.latents = None
         self.target_latents = target_latents
         ldm.initial_latents = comb_init_latents
-        with torch.no_grad():
-            self.default_mean = torch.mean(text_embedding)
-            self.default_std = torch.std(text_embedding)
+
+    def get_text_embedding(self):
+        return torch.cat([self.uncondition, self.condition])
 
     def forward(self):
-        # print(f'min: {torch.min(shifted_text_embedding)}, max: {torch.max(torch.max(shifted_text_embedding))}')
-        latents = ldm.embedding_2_img('', self.text_embedding, save_img=False, dim=dim, return_pil=False,
+        latents = ldm.embedding_2_img('', self.get_text_embedding(), save_img=False, dim=dim, return_pil=False,
                                       return_latents=True, keep_init_latents=True)
 
-        latents = latents.flatten(start_dim=1, end_dim=-1)
+        self.latents = latents
 
-        distance = torch.dist(self.target_latents.to(torch.float64), latents.to(torch.float64))
-        print(distance)
-        return distance
+        latents = latents.flatten(start_dim=1, end_dim=-1)
+        cosine_similarity = torch.nn.functional.cosine_similarity(self.target_latents.to(torch.float64),
+                                                                  latents.to(torch.float64), dim=-1)
+        return cosine_similarity * 100
 
     def get_optimizer(self, eta, optim='SGD'):
         if optim == 'SGD':
@@ -67,20 +62,19 @@ class GradientDescent(torch.nn.Module):
 
 
 if __name__ == '__main__':
-    embedding = ldm.get_embedding([prompt])[0]
 
     with torch.no_grad():
-        target_latents = ldm.embedding_2_img('', embedding, save_img=False, dim=dim, seed=seed, return_pil=False,
+        target_latents = ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], save_img=False, dim=dim, seed=seed, return_pil=False,
                                              return_latents=True, keep_init_latents=False)
 
-    target_init_latents = torch.clone(ldm.initial_latents)
-    ldm.embedding_2_img('', embedding, dim=dim, seed=seed2, return_latents=True, keep_init_latents=False)
+        target_init_latents = torch.clone(ldm.initial_latents)
+        ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], dim=dim, seed=seed2, return_latents=True, keep_init_latents=False)
 
     combined_init_latents = ldm.combine_embeddings(target_init_latents, ldm.initial_latents, 0.02)
 
     target_latents = target_latents.flatten(start_dim=1, end_dim=-1)
 
-    gd = GradientDescent(embedding, target_latents, combined_init_latents)
+    gd = GradientDescent(ldm.text_enc([prompt]), target_latents, combined_init_latents)
 
     eta = 0.001
     num_images = 300
