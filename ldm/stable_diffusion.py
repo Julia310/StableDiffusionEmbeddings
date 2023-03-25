@@ -1,4 +1,4 @@
-from transformers import CLIPTextModel, CLIPTokenizer#, CLIPFeatureExtractor, CLIPVisionModel, CLIPImageProcessor
+from transformers import CLIPTextModel, CLIPTokenizer#, CLIPVisionModelWithProjection, CLIPImageProcessor#, CLIPFeatureExtractor, CLIPVisionModel,
 from transformers import AutoProcessor, CLIPModel
 import torch
 from diffusers import UNet2DConditionModel, LMSDiscreteScheduler, AutoencoderKL
@@ -26,7 +26,7 @@ class StableDiffusion:
         self.text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14",
                                                           torch_dtype=self.dtype).to(self.device)
         #self.preprocessor = CLIPFeatureExtractor.from_pretrained('openai/clip-vit-large-patch14')
-        #self.vision_encoder = CLIPVisionModel.from_pretrained('openai/clip-vit-large-patch14')
+        #self.vision_encoder = CLIPVisionModelWithProjection.from_pretrained('openai/clip-vit-large-patch14')
         #self.preprocessor = CLIPImageProcessor.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=self.dtype)
         #self.image_encoder = CLIPVisionModel.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=self.dtype).to(self.device)
         self.initial_latents = None
@@ -61,16 +61,15 @@ class StableDiffusion:
 
 
     #def image_to_embedding(self, image):
-    #
     #    features = self.preprocessor(image,
     #                            return_tensors='pt')
     #    image_embedding = self.vision_encoder(
     #        **self.preprocessor(image,
     #                            return_tensors='pt')
-    #    ).last_hidden_state
+    #    )
     #    #inputs = self.preprocessor(images=image, return_tensors="pt")
     #    #image_embedding = self.vision_encoder.get_image_features(**inputs)
-    #    return image_embedding
+    #    return image_embedding.image_embeds
 
     def pil_to_latents(self, image):
         '''
