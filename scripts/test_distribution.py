@@ -192,11 +192,20 @@ def q_q_plot(prompts = None):
             #pylab.savefig(f'{i}_{input}')
 
 
+def print_embedding_statistics():
+    ldm = StableDiffusion()
+    for prompt in prompts:
+        emb = ldm.get_embedding([prompt])[0]
+        print(f'std: {torch.std(emb)}, mean: {torch.mean(emb)}')
+        print(f'std: {torch.min(emb)}, mean: {torch.max(emb)}')
+
+
 
 if __name__ == "__main__":
     #test_complete_embeddings()
     #test_embedding_dimensions(prompts)
-    rand_prompts = create_random_prompts(5, numeric=True)
+    #rand_prompts = create_random_prompts(5, numeric=True)
     #test_embedding_dimensions(rand_prompts)
-    q_q_plot(prompts)
+    #q_q_plot(prompts)
+    print_embedding_statistics()
 
