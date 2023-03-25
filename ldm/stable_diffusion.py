@@ -1,4 +1,5 @@
-from transformers import CLIPTextModel, CLIPTokenizer, CLIPImageProcessor, CLIPVisionModel
+from transformers import CLIPTextModel, CLIPTokenizer#, CLIPFeatureExtractor, CLIPVisionModel, CLIPImageProcessor
+from transformers import AutoProcessor, CLIPModel
 import torch
 from diffusers import UNet2DConditionModel, LMSDiscreteScheduler, AutoencoderKL
 from tqdm import tqdm
@@ -24,7 +25,9 @@ class StableDiffusion:
         self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=self.dtype)
         self.text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14",
                                                           torch_dtype=self.dtype).to(self.device)
-        #self.image_processor = CLIPImageProcessor.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=self.dtype)
+        #self.preprocessor = CLIPFeatureExtractor.from_pretrained('openai/clip-vit-large-patch14')
+        #self.vision_encoder = CLIPVisionModel.from_pretrained('openai/clip-vit-large-patch14')
+        #self.preprocessor = CLIPImageProcessor.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=self.dtype)
         #self.image_encoder = CLIPVisionModel.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=self.dtype).to(self.device)
         self.initial_latents = None
 
@@ -55,6 +58,19 @@ class StableDiffusion:
         images = (image * 255).round().astype("uint8")
         pil_images = [Image.fromarray(image) for image in images]
         return pil_images
+
+
+    #def image_to_embedding(self, image):
+    #
+    #    features = self.preprocessor(image,
+    #                            return_tensors='pt')
+    #    image_embedding = self.vision_encoder(
+    #        **self.preprocessor(image,
+    #                            return_tensors='pt')
+    #    ).last_hidden_state
+    #    #inputs = self.preprocessor(images=image, return_tensors="pt")
+    #    #image_embedding = self.vision_encoder.get_image_features(**inputs)
+    #    return image_embedding
 
     def pil_to_latents(self, image):
         '''

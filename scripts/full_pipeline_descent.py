@@ -160,17 +160,9 @@ if __name__ == '__main__':
             max_score = 0
 
 
-            #optimizer = gd.get_optimizer(eta, 'AdamOnLion')
-            #gd.latents = ldm.embedding_2_img('', gd.text_embedding, save_img=False, dim=dim, return_pil=False,
-            #                                 return_latents=True, keep_init_latents=True)
-
-        # print(f'std: {torch.std(gd.text_embedding)}, mean: {torch.mean(gd.text_embedding)}')
-        # pil_img = ldm.embedding_2_img('', gd.text_embedding,
-        #                              return_pil=True, save_img=False,
-        #                              return_latents=False, keep_init_latents=True)
         pil_img = ldm.latents_to_image(gd.latents)[0]
         pil_img.save(f'output/{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
 
         # if (i + 1) % 75 == 0:
-        #    gd.text_embedding = torch.nn.Parameter(get_shifted_embedding(gd.text_embedding, gd.default_std, gd.default_mean))
-        #    gd.text_embedding.requires_grad = True
+        #    gd_condition.text_embedding = torch.nn.Parameter(get_shifted_embedding(gd_condition.text_embedding, gd_condition.default_std, gd_condition.default_mean))
+        #    gd_condition.text_embedding.requires_grad = True
