@@ -135,7 +135,7 @@ class StableDiffusion:
         dot = (low_norm * high_norm).sum(1)
 
         if dot.mean() > 0.9995:
-            return latents1 * val + latents2 * (1 - val)
+            return latents1 * (1 - val) + latents2 * val
 
         omega = torch.acos(dot)
         so = torch.sin(omega)
