@@ -1,4 +1,4 @@
-from transformers import CLIPTextModel, CLIPTokenizer, CLIPImageProcessor, CLIPVisionModel
+from transformers import CLIPTextModel, CLIPTokenizer#, CLIPImageProcessor, CLIPVisionModel
 import torch
 from diffusers import UNet2DConditionModel, LMSDiscreteScheduler, AutoencoderKL
 from tqdm import tqdm
@@ -82,7 +82,6 @@ class StableDiffusion:
 
         return embedding_list
 
-
     def random_embedding(self, shape, std, mean, num):
         embedding_list = list()
         for i in range(num):
@@ -132,7 +131,7 @@ class StableDiffusion:
         dot = (low_norm * high_norm).sum(1)
 
         if dot.mean() > 0.9995:
-            return latents1 * val + latents2 * (1 - val)
+            return latents1 * (1 - val) + latents2 * val
 
         omega = torch.acos(dot)
         so = torch.sin(omega)
@@ -140,7 +139,7 @@ class StableDiffusion:
             1) * latents2
         return res
 
-    def embedding_2_img(self, prompt, emb, keep_init_latents = True, return_pil=True, dim=512, g=7.5, seed=61582, steps=70, save_img=True):
+    def embedding_2_img(self, prompt, emb, keep_init_latents=True, return_pil=True, dim=512, g=7.5, seed=61582, steps=70, save_img=True):
         """
         Diffusion process to convert input to image
         """
