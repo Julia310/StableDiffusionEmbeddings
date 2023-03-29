@@ -4,6 +4,7 @@ from aesthetic_predictor.simple_inference import AestheticPredictor
 from torchvision.transforms import CenterCrop, Resize, Normalize, InterpolationMode
 from optimizer.adam_on_lion import AdamOnLion
 from torch.nn import functional as F
+from time import time
 
 seed = 61582
 dim = 512
@@ -129,6 +130,8 @@ class GradientDescent(torch.nn.Module):
 
 
 if __name__ == '__main__':
+
+    start = time()
     prompt = prompt1
     gradient_descent = GradientDescent(ldm.get_embedding([prompt])[0])
 
@@ -159,10 +162,12 @@ if __name__ == '__main__':
 
     embedding2 = gradient_descent.text_embedding
 
-    for i in range(49):
-        alpha = (i+1) * 0.02
-        print(alpha)
+    print((time() - start)/60.0)
 
-        combined_embedding = ldm.combine_embeddings(embedding1, embedding2, alpha)
-        pil_image = ldm.embedding_2_img('', combined_embedding, dim=dim, seed=seed, return_pil=True, steps=70, save_img=False)
-        pil_image.save(f'output/{i + 1}_{prompt}.jpg')
+   #for i in range(49):
+   #    alpha = (i+1) * 0.02
+   #    print(alpha)
+
+   #    combined_embedding = ldm.combine_embeddings(embedding1, embedding2, alpha)
+   #    pil_image = ldm.embedding_2_img('', combined_embedding, dim=dim, seed=seed, return_pil=True, steps=70, save_img=False)
+   #    pil_image.save(f'output/{i + 1}_{prompt}.jpg')
