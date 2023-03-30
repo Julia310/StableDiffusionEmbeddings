@@ -91,9 +91,6 @@ class GradientDescent(torch.nn.Module):
 
 if __name__ == '__main__':
 
-    max_score = 0
-    max_emb = None
-
     with torch.no_grad():
         target_latents = ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], save_img=False, dim=dim, seed=seed, return_pil=False,
                                              return_latents=True, keep_init_latents=False)
@@ -105,14 +102,14 @@ if __name__ == '__main__':
     val = 0.2
 
     combined_init_latents = ldm.combine_embeddings(target_init_latents, latents, val)
-    # combined_init_latents = ldm.slerp(target_init_latents, ldm.initial_latents, 0.1)
+    # combined_init_latents = ldm.slerp(target_init_latents, ldm.initial_latents, val)
 
     target_latents = target_latents.flatten(start_dim=1, end_dim=-1)
 
     gd = GradientDescent(ldm.text_enc([prompt]), target_latents, combined_init_latents)
 
     eta = 0.01
-    num_images = 1000
+    num_images = 500
 
     optimizer = gd.get_optimizer(eta, 'AdamOnLion')
     update_steps = 0
@@ -124,17 +121,11 @@ if __name__ == '__main__':
         optimizer.zero_grad()
         score = gd.forward()
 
-        if score > max_score:
-            max_score = score.item()
-            max_emb = torch.clone(gd.condition)
-
         if init_score or score > target_score:
             init_score = True
 
-            if score >= target_score:
-                if update_steps >= 15:
-                    target_score = target_score * 0.999
-                    update_steps = 0
+            if update_steps >= 10:
+                update_steps = 0
                 val = val + 0.01
                 print('update initial latents')
                 print(val)
@@ -147,17 +138,6 @@ if __name__ == '__main__':
         loss.backward(retain_graph=True)
         optimizer.step()
         update_steps = update_steps + 1
-
-        if update_steps >= 25:
-            print('update embedding after 25 steps')
-            target_score = max_score * 0.999
-            update_steps = 0
-
-            print(max_score)
-
-            gd.condition = torch.nn.Parameter(max_emb)
-            max_emb = None
-            max_score = 0
 
 
         pil_img = ldm.latents_to_image(gd.latents)[0]

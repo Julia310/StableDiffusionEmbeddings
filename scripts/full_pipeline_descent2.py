@@ -83,7 +83,7 @@ if __name__ == '__main__':
         ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], dim=dim, seed=seed2, return_latents=True, keep_init_latents=False)
         latents = torch.clone(ldm.initial_latents)
 
-    combined_init_latents = ldm.combine_embeddings(target_init_latents, latents, 0.05)
+    combined_init_latents = ldm.combine_embeddings(target_init_latents, latents, 0.1)
 
     target_latents = target_latents.flatten(start_dim=1, end_dim=-1)
 
@@ -93,29 +93,29 @@ if __name__ == '__main__':
     gd_init_latents.set_torch_parameter()
 
 
-    num_images = 1000
+    num_images = 500
 
     optimizer_condition = gd_condition.get_optimizer(0.01, 'AdamOnLion')
     optimizer_init_latents = gd_init_latents.get_optimizer(0.001, 'AdamOnLion')
     update_steps = 0
 
     for i in range(num_images):
-        if (i+1) % 15 != 0:
+        if (i+1) % 2 != 0:
             gd_condition.initial_latents = torch.clone(gd_init_latents.initial_latents)
             optimizer_condition.zero_grad()
             score = gd_condition.forward()
-            if score > max_score:
-                max_score = score.item()
-                max_emb = torch.clone(gd_condition.condition)
+            #if score > max_score:
+            #    max_score = score.item()
+            #    max_emb = torch.clone(gd_condition.condition)
             loss = -score
             loss.backward(retain_graph=True)
             optimizer_condition.step()
             update_steps = update_steps + 1
             pil_img = ldm.latents_to_image(gd_condition.latents)[0]
         else:
-            gd_init_latents.condition = torch.clone(max_emb)
-            max_emb = None
-            max_score = 0
+            gd_init_latents.condition = torch.clone(gd_condition.condition)
+            #max_emb = None
+            #max_score = 0
             optimizer_init_latents.zero_grad()
             score = gd_init_latents.forward()
             print(score)
