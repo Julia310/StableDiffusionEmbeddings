@@ -6,7 +6,6 @@ from optimizer.adam_on_lion import AdamOnLion
 from torch.nn import functional as F
 from time import time
 
-seed = 61582
 dim = 512
 
 device = 'cuda'
@@ -87,15 +86,27 @@ def preprocess(rgb):
 
 
 class GradientDescent(torch.nn.Module):
-    def __init__(self, text_embedding):
+    def __init__(self, condition):
         super().__init__()
-        self.text_embedding = torch.nn.Parameter(text_embedding)
-        self.text_embedding.requires_grad = True
-        self.latents = None
+        self.condition = torch.nn.Parameter(condition)
+        self.condition.requires_grad = True
+        self.uncondition = ldm.text_enc([""], condition.shape[1])
 
-    def forward(self, g=7.5, steps=70):
-        latents = ldm.embedding_2_img('', self.text_embedding, dim=dim, seed=seed, return_pil=False, g=g, steps=steps)
-        self.latents = latents
+    def get_text_embedding(self, condition):
+        return torch.cat([self.uncondition, condition])
+
+    def forward(self, seed=61582, g=7.5, steps=70):
+        latents = ldm.embedding_2_img(
+            '',
+            self.get_text_embedding(self.condition),
+            dim=dim,
+            seed=seed,
+            keep_init_latents=False,
+            return_pil=False,
+            g=g,
+            steps=steps
+        )
+
         image = ldm.latents_to_image(latents, return_pil=False)
 
         image = preprocess(image)
@@ -122,52 +133,36 @@ class GradientDescent(torch.nn.Module):
             )
         else:
             return AdamOnLion(
-                params=gradient_descent.parameters(),
+                params=self.parameters(),
                 lr=eta,
                 eps=0.001,
             )
+#data/rdm/searchers/openimages
 
+def get_image(seed, iterations, prompt):
+    max_score = 0
+    max_embedding = None
 
-
-if __name__ == '__main__':
-
-    start = time()
-    prompt = prompt1
     gradient_descent = GradientDescent(ldm.get_embedding([prompt])[0])
-
-    eta = 0.01
-    num_images = 1000
-
-    optimizer = gradient_descent.get_optimizer(eta, 'AdamOnLion')
-
-    score = 0
-    cnt = 0
-    #for i in range(num_images):
-    while score < 6.93 and cnt < 350 or score < 7.1:
+    optimizer = gradient_descent.get_optimizer(0.01, 'AdamOnLion')
+    for i in range(int(iterations)):
         optimizer.zero_grad()
-        score = gradient_descent.forward(steps=70)
+        score = gradient_descent.forward(seed=int(seed), steps=70)
+        if score > max_score:
+            max_score = round(score.item(), 4)
+            max_embedding = torch.clone(gradient_descent.text_embedding)
         loss = -score
         loss.backward()
         optimizer.step()
-        cnt += 1
+
+    pil_image = ldm.embedding_2_img('', max_embedding, dim=dim, seed=seed, return_pil=True, steps=70, save_img=False)
+    return max_score, pil_image
+
+
+if __name__ == '__main__':
+    image = get_image(61582, 7, "cat")
 
 
 
-    embedding1 =  ldm.get_embedding([prompt])[0]
-    pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
-    pil_image.save(f'output/50_{prompt[0:45]}_{score.item()}.jpg')
 
-    pil_image = ldm.embedding_2_img('', embedding1, dim=dim, seed=seed, return_pil=True, steps=70, save_img=False)
-    pil_image.save(f'output/0_{prompt[0:45]}_{score.item()}.jpg')
 
-    embedding2 = gradient_descent.text_embedding
-
-    print((time() - start)/60.0)
-
-   #for i in range(49):
-   #    alpha = (i+1) * 0.02
-   #    print(alpha)
-
-   #    combined_embedding = ldm.combine_embeddings(embedding1, embedding2, alpha)
-   #    pil_image = ldm.embedding_2_img('', combined_embedding, dim=dim, seed=seed, return_pil=True, steps=70, save_img=False)
-   #    pil_image.save(f'output/{i + 1}_{prompt}.jpg')
