@@ -1,6 +1,7 @@
 from ldm.stable_diffusion import StableDiffusion
 from optimizer.adam_on_lion import AdamOnLion
 import torch
+from utils.create_graphics import plot_scores
 
 seed = 61582
 seed2 = 615845
@@ -83,7 +84,12 @@ if __name__ == '__main__':
         ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], dim=dim, seed=seed2, return_latents=True, keep_init_latents=False)
         latents = torch.clone(ldm.initial_latents)
 
-    combined_init_latents = ldm.combine_embeddings(target_init_latents, latents, 0.1)
+    combined_init_latents = ldm.combine_embeddings(target_init_latents, latents, 0.075)
+
+    #print(round(torch.dist(
+    #                target_init_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64),
+    #                latents.flatten(start_dim=1, end_dim=-1).to(torch.float64)
+    #            ).item(), 4))
 
     target_latents = target_latents.flatten(start_dim=1, end_dim=-1)
 
@@ -93,20 +99,20 @@ if __name__ == '__main__':
     gd_init_latents.set_torch_parameter()
 
 
-    num_images = 500
+    num_images = 700
 
     optimizer_condition = gd_condition.get_optimizer(0.01, 'AdamOnLion')
     optimizer_init_latents = gd_init_latents.get_optimizer(0.001, 'AdamOnLion')
     update_steps = 0
+
+    init_latents_dist_list = list()
+    scores_list = list()
 
     for i in range(num_images):
         if (i+1) % 2 != 0:
             gd_condition.initial_latents = torch.clone(gd_init_latents.initial_latents)
             optimizer_condition.zero_grad()
             score = gd_condition.forward()
-            #if score > max_score:
-            #    max_score = score.item()
-            #    max_emb = torch.clone(gd_condition.condition)
             loss = -score
             loss.backward(retain_graph=True)
             optimizer_condition.step()
@@ -114,15 +120,26 @@ if __name__ == '__main__':
             pil_img = ldm.latents_to_image(gd_condition.latents)[0]
         else:
             gd_init_latents.condition = torch.clone(gd_condition.condition)
-            #max_emb = None
-            #max_score = 0
             optimizer_init_latents.zero_grad()
             score = gd_init_latents.forward()
             print(score)
+            scores_list.append(round(score.item(), 4))
+            init_latents_dist_list.append(
+                round(torch.dist(
+                    target_init_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64),
+                    gd_init_latents.initial_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64)
+                ).item(), 4)
+            )
+
             loss = score
             loss.backward(retain_graph=True)
             optimizer_init_latents.step()
             pil_img = ldm.latents_to_image(gd_init_latents.latents)[0]
 
-        pil_img.save(f'output/{i}_{prompt[0:25]}_{round(score.item(), 3)}.jpg')
+        #pil_img.save(f'output/{i}_{prompt[0:25]}_{round(score.item(), 3)}.jpg')
+    print(scores_list)
+    print(init_latents_dist_list)
+
+    plot_scores(scores_list, r'output/similarity_scores.jpg', x_label='Iterations')
+    plot_scores(init_latents_dist_list, r'output/init_latent_distances.jpg', x_label='Iterations')
 

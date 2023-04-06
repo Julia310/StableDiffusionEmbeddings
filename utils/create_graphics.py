@@ -26,7 +26,7 @@ def create_boxplot(values, prompt_aesthetics=None, filename=None):
     return fig
 
 
-def plot_aesthetic_scores(scores, save_dir):
+def plot_scores(scores, file_path, y_label='Score', x_label='Image'):
     """
     Create a line plot of aesthetic scores and save the image to the specified directory.
 
@@ -35,6 +35,6 @@ def plot_aesthetic_scores(scores, save_dir):
     save_dir (str): The directory to save the image to.
     """
     plt.plot(scores)
-    plt.ylabel('Aesthetic Score')
-    plt.xlabel('Image')
-    plt.savefig(save_dir)
+    plt.ylabel(y_label)
+    plt.xlabel(x_label)
+    plt.savefig(file_path)
