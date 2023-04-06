@@ -17,16 +17,6 @@ prompt1 = 'a beautiful painting of a peaceful lake in the Land of the Dreams, fu
          'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 
 
-#prompt2 = "ugly meme, funniest thing ever"
-#prompt3 = "a dad angry at missing his flight from prague to nyc, the dad is drunk "
-
-#prompt4 = "Cute small humanoid bat sitting in a movie theater eating popcorn watching a movie ,unreal engine, cozy " \
-#         "indoor lighting, artstation, detailed, digital painting,cinematic,character design by mark ryden and pixar " \
-#         "and hayao miyazaki, unreal 5, daz, hyperrealistic, octane render"
-
-#prompts = [prompt1, prompt2, prompt3]
-
-
 def compute_blurriness(image):
     # Convert the image to grayscale
     gray_image = 0.2989 * image[:, 0, :, :] + 0.5870 * image[:, 1, :, :] + 0.1140 * image[:, 2, :, :]
@@ -143,24 +133,29 @@ def get_image(seed, iterations, prompt):
     max_score = 0
     max_embedding = None
 
-    gradient_descent = GradientDescent(ldm.get_embedding([prompt])[0])
+    gradient_descent = GradientDescent(ldm.text_enc([prompt]))
+    initial_embedding = torch.clone(gradient_descent.get_text_embedding(gradient_descent.condition))
+    initial_score = 0
     optimizer = gradient_descent.get_optimizer(0.01, 'AdamOnLion')
     for i in range(int(iterations)):
         optimizer.zero_grad()
         score = gradient_descent.forward(seed=int(seed), steps=70)
+        if initial_score == 0:
+            initial_score = round(score.item(), 4)
         if score > max_score:
             max_score = round(score.item(), 4)
-            max_embedding = torch.clone(gradient_descent.text_embedding)
+            max_embedding = torch.clone(gradient_descent.get_text_embedding(gradient_descent.condition))
         loss = -score
-        loss.backward()
+        loss.backward(retain_graph=True)
         optimizer.step()
 
-    pil_image = ldm.embedding_2_img('', max_embedding, dim=dim, seed=seed, return_pil=True, steps=70, save_img=False)
-    return max_score, pil_image
+    max_image = ldm.embedding_2_img('', max_embedding, dim=dim, seed=seed, return_pil=True, steps=70, save_img=False)
+    initial_image = ldm.embedding_2_img('', initial_embedding, dim=dim, seed=seed, return_pil=True, steps=70, save_img=False)
+    return initial_score, max_score, initial_image, max_image
 
 
 if __name__ == '__main__':
-    image = get_image(61582, 7, "cat")
+    initial_score, score, initial_image, image = get_image(61582, 7, "cat")
 
 
 
