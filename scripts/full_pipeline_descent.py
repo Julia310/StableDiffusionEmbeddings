@@ -122,7 +122,7 @@ class GradientDescent(torch.nn.Module):
             )
         else:
             return AdamOnLion(
-                params=gradient_descent.parameters(),
+                params=self.parameters(),
                 lr=eta,
                 eps=0.001,
             )

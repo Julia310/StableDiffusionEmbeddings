@@ -117,12 +117,6 @@ class StableDiffusion:
 
     def set_initial_latents(self, dim):
         latents = torch.randn((1, self.unet.in_channels, dim // 8, dim // 8))
-
-        # Adding noise to the latents
-        if self.device == "cpu":
-            latents = latents.to(self.device).float() * self.scheduler.init_noise_sigma
-        else:
-            latents = latents.to(self.device).half() * self.scheduler.init_noise_sigma
         return latents
 
     def slerp(self, latents1, latents2, val):
@@ -146,13 +140,21 @@ class StableDiffusion:
 
         if seed: torch.manual_seed(seed)
 
+        if not keep_init_latents: self.initial_latents = None
+        if self.initial_latents is None: self.initial_latents = self.set_initial_latents(dim=dim)
+
+
         # Setting number of steps in scheduler
         self.scheduler.set_timesteps(steps)
 
-        if not keep_init_latents: self.initial_latents = None
-
-        if self.initial_latents is None: self.initial_latents = self.set_initial_latents(dim=dim)
         latents = torch.clone(self.initial_latents)
+
+        # Adding noise to the latents
+        if self.device == "cpu":
+            latents = latents.to(self.device).float() * self.scheduler.init_noise_sigma
+        else:
+            latents = latents.to(self.device).half() * self.scheduler.init_noise_sigma
+
 
         # Iterating through defined steps
         for i, ts in enumerate(tqdm(self.scheduler.timesteps)):

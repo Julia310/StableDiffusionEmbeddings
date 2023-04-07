@@ -48,11 +48,8 @@ if __name__ == '__main__':
 
     for i in range(49):
         alpha = (i+1) * 0.02
-        #print(alpha)
-        combined_init_latents = ldm.combine_embeddings(init_latents1, init_latents2, alpha)
+        combined_init_latents = ldm.slerp(init_latents1, init_latents2, alpha)
         ldm.initial_latents = combined_init_latents
         pil_image = ldm.embedding_2_img('', embedding, dim=dim, seed=seed, return_pil=True, steps=steps,
                                         keep_init_latents=True, save_img=False)
         pil_image.save(f'output/{i + 1}_{prompt2[0:45]}.jpg')
-
-    print(':)')
