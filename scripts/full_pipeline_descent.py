@@ -31,7 +31,7 @@ def compute_blurriness(image):
     # Compute the variance of the Laplacian filter response
     variance = torch.var(filtered_image)
 
-    return variance
+    return variance * 100
 
 
 def compute_metric(image):
@@ -74,6 +74,11 @@ def preprocess(rgb):
     rgb = Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))(rgb)
     return rgb
 
+def laion_aesthetic(image):
+    image = preprocess(image)
+    image_embedding = aesthetic_predictor.clip.encode_image(image).float()
+    image_embedding = aesthetic_predictor.get_features(image_embedding, image_input=False)
+    return aesthetic_predictor.mlp(image_embedding).squeeze()
 
 class GradientDescent(torch.nn.Module):
     def __init__(self, condition):
@@ -85,7 +90,7 @@ class GradientDescent(torch.nn.Module):
     def get_text_embedding(self, condition):
         return torch.cat([self.uncondition, condition])
 
-    def forward(self, seed=61582, g=7.5, steps=70):
+    def forward(self, metric, seed=61582, g=7.5, steps=70):
         latents = ldm.embedding_2_img(
             '',
             self.get_text_embedding(self.condition),
@@ -98,11 +103,19 @@ class GradientDescent(torch.nn.Module):
         )
 
         image = ldm.latents_to_image(latents, return_pil=False)
+        
+        match metric:
+            case "LAION-Aesthetics V2":
+                score = laion_aesthetic(image)
+            case "Sharpness":
+                score = compute_blurriness(image)
+            case "Bluriness":
+                score = -compute_blurriness(image) * 10
+            case "Saturation increase":
+                score = compute_colorfulness(image)
+            case "Saturation decrease":
+                score = -compute_colorfulness(image) / 100.0
 
-        image = preprocess(image)
-        image_embedding = aesthetic_predictor.clip.encode_image(image).float()
-        image_embedding = aesthetic_predictor.get_features(image_embedding, image_input=False)
-        score = aesthetic_predictor.mlp(image_embedding).squeeze()
         print(score)
 
         return score
@@ -129,17 +142,17 @@ class GradientDescent(torch.nn.Module):
             )
 #data/rdm/searchers/openimages
 
-def get_image(seed, iterations, prompt):
-    max_score = 0
+def get_image(seed, iterations, prompt, optimizer, metric):
+    max_score = -1000.0
     max_embedding = None
 
     gradient_descent = GradientDescent(ldm.text_enc([prompt]))
     initial_embedding = torch.clone(gradient_descent.get_text_embedding(gradient_descent.condition))
     initial_score = 0
-    optimizer = gradient_descent.get_optimizer(0.01, 'AdamOnLion')
+    optimizer = gradient_descent.get_optimizer(0.01, optimizer)
     for i in range(int(iterations)):
         optimizer.zero_grad()
-        score = gradient_descent.forward(seed=int(seed), steps=70)
+        score = gradient_descent.forward(metric, seed=int(seed), steps=70)
         if initial_score == 0:
             initial_score = round(score.item(), 4)
         if score > max_score:
@@ -155,7 +168,7 @@ def get_image(seed, iterations, prompt):
 
 
 if __name__ == '__main__':
-    initial_score, score, initial_image, image = get_image(61582, 7, "cat")
+    initial_score, score, initial_image, image = get_image(61582, 7, "cat", "Adam", "Sharpness")
 
 
 
