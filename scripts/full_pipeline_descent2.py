@@ -98,18 +98,21 @@ if __name__ == '__main__':
     gd_init_latents = GradientDescent(ldm.text_enc([prompt]), target_latents, combined_init_latents)
     gd_init_latents.set_torch_parameter()
 
-
+    eta = 0.1
 
     optimizer_condition = gd_condition.get_optimizer(0.01, 'AdamOnLion')
-    optimizer_init_latents = gd_init_latents.get_optimizer(0.001, 'AdamOnLion')
+    optimizer_init_latents = gd_init_latents.get_optimizer(eta, 'AdamOnLion')
 
     init_latents_dist_list = list()
     scores_list = list()
 
     initial_score = 0
 
-    for i in range(700):
-        if (i+1) % 2 != 0 or score < initial_score + 0.5:
+    for i in range(4000):
+        if (i + 1) % 1500 == 0:
+            eta *= 0.1
+            optimizer_init_latents = gd_init_latents.get_optimizer(eta, 'AdamOnLion')
+        if (i+1) % 2 != 0: #or score < initial_score + 0.5:
             gd_condition.initial_latents = torch.clone(gd_init_latents.initial_latents)
             optimizer_condition.zero_grad()
             score = gd_condition.forward()
@@ -117,7 +120,7 @@ if __name__ == '__main__':
             loss = -score
             loss.backward(retain_graph=True)
             optimizer_condition.step()
-            pil_img = ldm.latents_to_image(gd_condition.latents)[0]
+            #pil_img = ldm.latents_to_image(gd_condition.latents)[0]
         else:
             gd_init_latents.condition = torch.clone(gd_condition.condition)
             optimizer_init_latents.zero_grad()
@@ -130,13 +133,13 @@ if __name__ == '__main__':
                     gd_init_latents.initial_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64)
                 ).item(), 4)
             )
+            #pil_img = ldm.latents_to_image(gd_init_latents.latents)[0]
 
             loss = score
             loss.backward(retain_graph=True)
             optimizer_init_latents.step()
-            pil_img = ldm.latents_to_image(gd_init_latents.latents)[0]
 
-        pil_img.save(f'output/{i}_{prompt[0:25]}_{round(score.item(), 3)}.jpg')
+            #pil_img.save(f'output/{i}_{prompt[0:25]}_{round(score.item(), 3)}.jpg')
     print(scores_list)
     print(init_latents_dist_list)
 

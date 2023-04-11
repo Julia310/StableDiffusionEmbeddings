@@ -174,8 +174,8 @@ class StableDiffusion:
             inp = self.scheduler.scale_model_input(torch.cat([latents] * 2), ts)
 
             # Predicting noise residual using U-Net
-            if i < steps-1:
-            #if i > 0:
+            #if i < steps-1:
+            if i != 0:
                 with torch.no_grad():
                     u, t = self.unet(inp, ts, encoder_hidden_states=emb).sample.chunk(2)
             else:
@@ -186,8 +186,8 @@ class StableDiffusion:
 
             # Conditioning  the latents
             latents = self.scheduler.step(pred, ts, latents).prev_sample
-            if return_latents and i == steps-1:
-            #if return_latents and i == 0:
+            #if return_latents and i == steps-1:
+            if return_latents and i == 0:
                 return latents
 
         if not return_pil: return latents
