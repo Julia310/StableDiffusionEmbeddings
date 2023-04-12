@@ -7,6 +7,7 @@ from torch.nn import functional as F
 from time import time
 
 seed = 61582
+seed = 9373462
 dim = 512
 
 device = 'cuda'
@@ -16,6 +17,8 @@ aesthetic_predictor = AestheticPredictor(device=device)
 
 prompt1 = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
          'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
+
+prompt1 = 'a painting of dubrovnik in the style of josip skerlj'
 
 
 #prompt2 = "ugly meme, funniest thing ever"
@@ -136,16 +139,18 @@ if __name__ == '__main__':
     gradient_descent = GradientDescent(ldm.get_embedding([prompt])[0])
 
     eta = 0.01
-    num_images = 1000
+    num_images = 700
 
     optimizer = gradient_descent.get_optimizer(eta, 'AdamOnLion')
 
     score = 0
     cnt = 0
-    #for i in range(num_images):
-    while score < 6.93 and cnt < 350 or score < 7.1:
+    for i in range(num_images):
+    #while score < 6.93 and cnt < 350 or score < 7.1:
         optimizer.zero_grad()
         score = gradient_descent.forward(steps=70)
+        pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
+        pil_image.save(f'output/{i}_{prompt[0:45]}_{round(score.item(), 4)}.jpg')
         loss = -score
         loss.backward()
         optimizer.step()
@@ -153,14 +158,14 @@ if __name__ == '__main__':
 
 
 
-    embedding1 =  ldm.get_embedding([prompt])[0]
+    """embedding1 =  ldm.get_embedding([prompt])[0]
     pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
     pil_image.save(f'output/50_{prompt[0:45]}_{score.item()}.jpg')
 
     pil_image = ldm.embedding_2_img('', embedding1, dim=dim, seed=seed, return_pil=True, steps=70, save_img=False)
     pil_image.save(f'output/0_{prompt[0:45]}_{score.item()}.jpg')
 
-    embedding2 = gradient_descent.text_embedding
+    embedding2 = gradient_descent.text_embedding"""
 
     print((time() - start)/60.0)
 
