@@ -84,7 +84,7 @@ if __name__ == '__main__':
         ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], dim=dim, seed=seed2, return_latents=True, keep_init_latents=False)
         latents = torch.clone(ldm.initial_latents)
 
-    combined_init_latents = ldm.combine_embeddings(target_init_latents, latents, 0.05)
+    combined_init_latents = ldm.combine_embeddings(target_init_latents, latents, 0.06)
 
     print(round(torch.dist(
                     target_init_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64),
@@ -107,11 +107,13 @@ if __name__ == '__main__':
     scores_list = list()
 
     initial_score = 0
+    update_eta = 0
 
-    for i in range(4000):
-        if (i + 1) % 1500 == 0:
+    for i in range(6000):
+        if (i + 1) % 1500 == 0 and update_eta <= 2:
             eta *= 0.1
             optimizer_init_latents = gd_init_latents.get_optimizer(eta, 'AdamOnLion')
+            update_eta += 1
         if (i+1) % 2 != 0: #or score < initial_score + 0.5:
             gd_condition.initial_latents = torch.clone(gd_init_latents.initial_latents)
             optimizer_condition.zero_grad()
@@ -133,13 +135,17 @@ if __name__ == '__main__':
                     gd_init_latents.initial_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64)
                 ).item(), 4)
             )
-            #pil_img = ldm.latents_to_image(gd_init_latents.latents)[0]
+            if i == 3999: pil_img = ldm.embedding_2_img('', gd_init_latents.get_text_embedding(), save_img=False)
 
             loss = score
             loss.backward(retain_graph=True)
             optimizer_init_latents.step()
 
-            #pil_img.save(f'output/{i}_{prompt[0:25]}_{round(score.item(), 3)}.jpg')
+    pil_img.save(f'output/{3999}_{prompt[0:25]}_{round(score.item(), 3)}.jpg')
+    embedding = ldm.get_embedding([prompt])[0]
+    ldm.initial_latents = gd_init_latents.initial_latents
+    pil_img = ldm.embedding_2_img('', embedding, save_img=False)
+    pil_img.save(f'output/init_prompt_{prompt[0:25]}.jpg')
     print(scores_list)
     print(init_latents_dist_list)
 
