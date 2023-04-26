@@ -1,5 +1,4 @@
 import gradio as gr
-from gradio.components import Dropdown
 from scripts.full_pipeline_descent import get_image
 
 with gr.Blocks() as demo:
