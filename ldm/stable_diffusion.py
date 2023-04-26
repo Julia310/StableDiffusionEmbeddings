@@ -1,6 +1,6 @@
 from transformers import CLIPTextModel, CLIPTokenizer#, CLIPImageProcessor, CLIPVisionModel
 import torch
-from diffusers import UNet2DConditionModel, LMSDiscreteScheduler, AutoencoderKL
+from diffusers import UNet2DConditionModel, LMSDiscreteScheduler, AutoencoderKL, EulerDiscreteScheduler
 from tqdm import tqdm
 import os
 from PIL import Image
@@ -115,6 +115,13 @@ class StableDiffusion:
             / (torch.sqrt(torch.std(X) ** 2 + torch.std(Y) ** 2 + 2 * cov) + 1e-14)
         return Z
 
+    def lerp(self, embedding1, embedding2, noise):
+
+        X = embedding1 * (1 - noise)
+        Y = embedding2 * noise
+
+        return X + Y
+
     def set_initial_latents(self, dim):
         latents = torch.randn((1, self.unet.in_channels, dim // 8, dim // 8))
 
@@ -178,7 +185,5 @@ class StableDiffusion:
 
         # Saving image
         if save_img:
-            if not os.path.exists(f'./steps'):
-                os.mkdir(f'./steps')
             pil_image.save(f'output/{prompt[0:45]}.jpg')
         return pil_image
