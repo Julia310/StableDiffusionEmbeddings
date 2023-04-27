@@ -99,8 +99,8 @@ with gr.Blocks() as demo:
                 prompt = gr.Textbox(label="Prompt")
         with gr.Column():
             with gr.Row():
-                choice = gr.Radio(["Img1", "Img2", "Img3", "Img4", "Img5"], label="Select an image")
-                selection_effect = gr.Slider(label="Selection Effect", minimum=0.0, maximum=1.0)
+                choice = gr.Radio(["Img1", "Img2", "Img3", "Img4", "Img5"], label="Select an Image")
+                selection_effect = gr.Slider(label="Interpolation Value", minimum=0.0, maximum=1.0)
     with gr.Row():
         btn_init = gr.Button("Initialize Pipeline")
         btn_select = gr.Button("Select")
