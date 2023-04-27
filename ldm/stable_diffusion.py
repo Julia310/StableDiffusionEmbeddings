@@ -18,7 +18,7 @@ class StableDiffusion:
                                               num_train_timesteps=1000)
         self.scheduler.set_timesteps(51)
         self.unet = UNet2DConditionModel.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="unet",
-                                                         torch_dtype=self.dtype).to(self.device)
+                                                         torch_dtype=self.dtype, ).to(self.device)
         self.vae = AutoencoderKL.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="vae",
                                                  torch_dtype=self.dtype).to(self.device)
         self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=self.dtype)
