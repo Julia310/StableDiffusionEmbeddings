@@ -46,7 +46,7 @@ class GradientDescent(torch.nn.Module):
                                       return_latents=True,
                                       keep_init_latents=False)
         self.latents_list[0] = torch.clone(latents)
-        latents = latents.flatten(start_dim=1,
+        latents = latents[:, :, 30:34, 30:34].flatten(start_dim=1,
                                   end_dim=-1)
         cosine_similarity = torch.nn.functional.cosine_similarity(self.target_latents.to(torch.float64),
                                                                   latents.to(torch.float64),
@@ -107,10 +107,10 @@ if __name__ == '__main__':
                                              keep_init_latents=False)
 
     gd = GradientDescent(ldm.text_enc([prompt]),
-                         target_latents.flatten(start_dim=1, end_dim=-1))
+                         target_latents[:, :, 30:34, 30:34].flatten(start_dim=1, end_dim=-1))
 
 
-    num_images = 200
+    num_images = 800
 
     optimizer = gd.get_optimizer(eta=0.01,
                                  optim='AdamOnLion')
@@ -123,4 +123,8 @@ if __name__ == '__main__':
         loss = -score
         loss.backward(retain_graph=True)
         optimizer.step()
-    gd.latents_to_pil(num_images)
+    #gd.latents_to_pil(num_images)
+
+    text_embedding = gd.get_text_embedding(gd.condition1)
+    image = ldm.embedding_2_img('', text_embedding, keep_init_latents=False, seed=seed_list[0], return_pil=True, save_img=False)
+    image.save(f'output/{num_images}_{seed_list[0]}_{prompt[0:25]}.jpg')
