@@ -28,8 +28,8 @@ seed=3490347565
 
 ldm = StableDiffusion(device=device)
 
-prompts = ['Cute small squirrel sitting in a movie theater eating popcorn watching a movie ,unreal engine, cozy indoor lighting, artstation, detailed, digital painting,cinematic,character design by mark ryden and pixar and hayao miyazaki, unreal 5, daz, hyperrealistic, octane render',
-            'Cute small fox sitting in a movie theater eating popcorn watching a movie ,unreal engine, cozy indoor lighting, artstation, detailed, digital painting,cinematic,character design by mark ryden and pixar and hayao miyazaki, unreal 5, daz, hyperrealistic, octane render']
+#prompts = ['Cute small squirrel sitting in a movie theater eating popcorn watching a movie ,unreal engine, cozy indoor lighting, artstation, detailed, digital painting,cinematic,character design by mark ryden and pixar and hayao miyazaki, unreal 5, daz, hyperrealistic, octane render',
+#           'Cute small fox sitting in a movie theater eating popcorn watching a movie ,unreal engine, cozy indoor lighting, artstation, detailed, digital painting,cinematic,character design by mark ryden and pixar and hayao miyazaki, unreal 5, daz, hyperrealistic, octane render']
 
 prompts = ['a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, '
            'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful',
@@ -37,18 +37,28 @@ prompts = ['a beautiful painting of a peaceful lake in the Land of the Dreams, f
            "atmospheric perspective, altostratus clouds,, cinematic, 1000mm lens, anamorphic lens flare, photographic, "
            "octane render, cinematography by roger deakins, in the style of ansel adams, low details,"]
 
-prompts = ['A picture of a cat on a cushion, studio image photography', 'A picture of a dog on a cushion, studio image photography']
 
-prompts = ["beautiful mountain landscape, lake, snow, oil painting 8 k hd ",
-           "a beautiful and highly detailed matte painting of the epic mountains of avalon, intricate details, epic scale, insanely complex, 8 k, sharp focus, hyperrealism, very realistic, by caspar friedrich, albert bierstadt, james gurney, brian froud, "]
 
-prompts = ['full body image of a norwegian forest cat of white and ginger fur, by dan mumford, yusuke murata and '
-           'makoto shinkai, 8k, cel shaded, unreal engine, featured on artstation, pixiv',
-           'fluffy dog']
+#prompts = ["beautiful mountain landscape, lake, snow, oil painting 8 k hd ",
+#           "a beautiful and highly detailed matte painting of the epic mountains of avalon, intricate details, epic "
+#           "scale, insanely complex, 8 k, sharp focus, hyperrealism, very realistic, by caspar friedrich, albert "
+#           "bierstadt, james gurney, brian froud, "]
 
-prompts = ['cat sleeping in a circle with its face hidden inside of a christmas snowglobe', 'dog sleeping in a circle with its face hidden inside of a christmas snowglobe']
+#prompts = ["full body image of a norwegian forest cat of white and ginger fur, by dan mumford, yusuke murata and "
+#           "makoto shinkai, 8k, cel shaded, unreal engine, featured on artstation, pixiv",
+#           "fluffy dog"]
 
-prompts = ['majestic fluffy white cat, studio image photography', 'majestic fluffy white dog, studio image photography']
+#prompts = ['cat sleeping in a circle with its face hidden inside of a christmas snowglobe', 'dog sleeping in a circle with its face hidden inside of a christmas snowglobe']
+
+#prompts = ["A squirrel programming in Typescript on the moon", "Quokka in Interstellar movie"]
+
+
+
+#not working prompts
+
+#prompts = ["majestic fluffy white cat, studio image photography", "majestic fluffy white dog, studio image photography"]
+
+#prompts = ['A picture of a cat on a cushion, studio image photography', 'A picture of a dog on a cushion, studio image photography']
 
 
 if __name__ == '__main__':
@@ -61,17 +71,32 @@ if __name__ == '__main__':
     prompt = prompts[0][0:15] + '_' + prompts[1][0:15]
     prompt = prompt[0:30]
 
-    pil_image = ldm.embedding_2_img('', embedding1, dim=dim, seed=seed, return_pil=True, steps=steps, save_img=False)
-    pil_image.save(f'output/0_{prompt}.jpg')
-    pil_image = ldm.embedding_2_img('', embedding2, dim=dim, seed=seed, return_pil=True, steps=steps, save_img=False)
-    pil_image.save(f'output/50_{prompt}.jpg')
+    #pil_image = ldm.embedding_2_img('', embedding1, dim=dim, seed=seed, return_pil=True, steps=steps, save_img=False)
+    #pil_image.save(f'output/0_{prompt}.jpg')
+    #pil_image = ldm.embedding_2_img('', embedding2, dim=dim, seed=seed, return_pil=True, steps=steps, save_img=False)
+    #pil_image.save(f'output/50_{prompt}.jpg')
+#
+
+    condition1 = ldm.text_enc([prompts[0]], maxlen=77)
+    condition2 = ldm.text_enc([prompts[1]], maxlen=77)
+    uncond = ldm.text_enc([""], condition1.shape[1])
+
 
     for i in range(49):
         alpha = (i+1) * 0.02
         #print(alpha)
 
-        combined_embedding = ldm.combine_embeddings(embedding1, embedding2, alpha)
-        pil_image = ldm.embedding_2_img('', combined_embedding, dim=dim, seed=seed, return_pil=True, steps=steps, save_img=False)
+        cond = ldm.slerp(condition1, condition2, alpha)
+        emb = torch.cat([uncond, cond])
+
+        pil_image = ldm.embedding_2_img('', emb, dim=dim, seed=seed, return_pil=True, steps=steps, save_img=False)
 
         #pil_image = ldm.latents_to_image(combined_latents)[0]
         pil_image.save(f'output/{i + 1}_{prompt}.jpg')
+
+
+
+
+
+
+
