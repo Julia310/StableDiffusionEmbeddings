@@ -119,19 +119,15 @@ class StableDiffusion:
         latents = torch.randn((1, self.unet.in_channels, dim // 8, dim // 8))
         return latents
 
-    def slerp(self, latents1, latents2, val):
-        low_norm = latents1 / torch.norm(latents1, dim=1, keepdim=True)
-        high_norm = latents2 / torch.norm(latents2, dim=1, keepdim=True)
-        dot = (low_norm * high_norm).sum(1)
-
-        if dot.mean() > 0.9995:
-            return latents1 * (1 - val) + latents2 * val
-
-        omega = torch.acos(dot)
+    def slerp(self, low, high, val):
+        low_norm = low / torch.norm(low, dim=1, keepdim=True)
+        high_norm = high / torch.norm(high, dim=1, keepdim=True)
+        omega = torch.acos((low_norm * high_norm).sum(1))
         so = torch.sin(omega)
-        res = (torch.sin((1.0 - val) * omega) / so).unsqueeze(1) * latents1 + (torch.sin(val * omega) / so).unsqueeze(
-            1) * latents2
+        res = (torch.sin((1.0 - val) * omega) / so).unsqueeze(1) * low + (torch.sin(val * omega) / so).unsqueeze(
+            1) * high
         return res
+
 
     def embedding_2_img(self, prompt, emb, keep_init_latents=True, return_pil=True, dim=512, g=7.5, seed=61582, steps=70, save_img=True):
         """
