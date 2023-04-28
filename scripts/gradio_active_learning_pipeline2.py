@@ -2,6 +2,7 @@ import gradio as gr
 import torch
 from ldm.stable_diffusion import StableDiffusion
 from utils.image_generation import create_random_prompts, create_prompts
+import numpy as np
 
 ldm = StableDiffusion(device='cuda')
 uncondition = None
@@ -51,6 +52,18 @@ def init_pipeline_params(prompt, seed):
     return image_list[0], image_list[1], image_list[2], image_list[3], image_list[4], current_gd_image
 
 
+def compute_dot(cond_A, cond_B):
+    #low_norm = torch.mean(cond_A, dim=1, keepdim=True)
+    #high_norm = torch.mean(cond_B, dim=1, keepdim=True)
+    low_norm = cond_A[:,-1]
+    low_norm = low_norm / torch.norm(low_norm, dim=-1, keepdim=True)
+    high_norm = cond_B[:,-1]
+    high_norm = high_norm / torch.norm(high_norm, dim=-1, keepdim=True)
+
+    dot = (low_norm * high_norm).sum()
+    return dot
+
+
 def update_image_embedding(choice, selection_effect):
     global uncondition, condition_list, target_condition, current_condition
     global image_list, current_gd_image, previous_gd_image
@@ -61,14 +74,81 @@ def update_image_embedding(choice, selection_effect):
 
     current_condition = ldm.lerp(current_condition, target_condition, selection_effect)
 
-    prompt_list1 = create_random_prompts(len(condition_list), random_prompt_len=True)
-    prompt_list2 = create_prompts(len(condition_list), prompt_len=3)
+    N = len(condition_list) * 100
+    p = len(condition_list)
+
+
+    prompt_list1 = create_random_prompts(N, random_prompt_len=True)
+    prompt_list2 = create_prompts(N, prompt_len=3)
     prompt_list3 = create_prompts(len(condition_list), prompt_len=3)
     condition_list = []
+
+
+    temp_condition_list = list()
+    d = np.empty((N, N))
+
+    #https://stackoverflow.com/questions/48925086/choosing-subset-of-farthest-points-in-given-set-of-points/60955896#60955896
+    with torch.no_grad():
+
+        for i in range(N):
+            temp_condition_list.append(ldm.text_enc([prompt_list1[i] + prompt_list2[i]]))
+        for i in range(N):
+            for j in range(i, N):
+                d[i,j] = d[j, i] = 1 - compute_dot(temp_condition_list[i], temp_condition_list[j])
+    #d = (d + d.T) / 2  # Make the matrix symmetric
+
+    print("Finding initial edge...")
+    maxdist = 0
+    bestpair = ()
+    for i in range(N):
+        for j in range(i + 1, N):
+            if d[i, j] > maxdist:
+                maxdist = d[i, j]
+                bestpair = (i, j)
+
+    P = set()
+    P.add(bestpair[0])
+    P.add(bestpair[1])
+
+    print("Finding optimal set...")
+    while len(P) < p:
+        print("P size = {0}".format(len(P)))
+        maxdist = 0
+        vbest = None
+        for v in range(N):
+            if v in P:
+                continue
+            for vprime in P:
+                if d[v, vprime] > maxdist:
+                    maxdist = d[v, vprime]
+                    vbest = v
+        P.add(vbest)
+
+    print(d[list(P)][:,list(P)])
+
+    prompt_list1 = [prompt_list1[i] for i in P]
+    prompt_list2 = [prompt_list2[i] for i in P]
+
+
     for i in range(len(prompt_list1)):
-        cond = ldm.lerp(current_condition, ldm.text_enc([prompt_list1[i] + prompt_list2[i]]), 0.35)
+        # a*((1-faktor)*a+faktor*b) = const
+        const = 0.85
+        cond_A = current_condition
+        cond_B = ldm.text_enc([prompt_list1[i] + prompt_list2[i]])
+
+        val = (1-const)/(1 - compute_dot(cond_A, cond_B))
+        print(f'val: {val}')
+
+        print(f'shape: {compute_dot(cond_A, cond_B).shape}')
+        print(f'cond_A * cond_A: {compute_dot(cond_A, cond_A)}')
+        cond = ldm.lerp(cond_A, cond_B, val)
+
+        cond_A = cond
+        cond_B = ldm.text_enc([global_prompt + prompt_list3[i]])
+        val = (1 - const) / (1 - compute_dot(cond_A, cond_B))
+        print(val)
         condition_list.append(
-            ldm.lerp(cond, ldm.text_enc([global_prompt + prompt_list3[i]]), 0.4)
+            ldm.lerp(cond_A, cond_B, val)
         )
         embedding = torch.cat([uncondition, condition_list[i]])
         image_list[i] = ldm.embedding_2_img('', embedding, return_pil=True, save_img=False)
@@ -106,8 +186,8 @@ with gr.Blocks() as demo:
         btn_select = gr.Button("Select")
 
     with gr.Row():
-        previous_choice = gr.Image(label="Previous Selection", interactive=True)
         previous_image = gr.Image(label="Previous Image", interactive=True)
+        previous_choice = gr.Image(label="Previous Selection", interactive=True)
         image = gr.Image(label="Current Condition", interactive=True)
 
     btn_init.click(
