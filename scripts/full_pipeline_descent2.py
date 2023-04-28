@@ -22,7 +22,6 @@ ldm = StableDiffusion(device=device)
  #        'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 
 prompt = 'Single Color Ball'
-target_prompt = 'Black Single Color Ball'
 
 class GradientDescent(torch.nn.Module):
     def __init__(self, condition, target_latents, comb_init_latents):
@@ -52,8 +51,8 @@ class GradientDescent(torch.nn.Module):
         self.latents = latents
 
         cosine_similarity = torch.nn.functional.cosine_similarity(
-            self.target_latents[:, :, 30:34, 30:34].flatten(start_dim=1, end_dim=-1).to(torch.float64),
-            latents[:, :, 30:34, 30:34].flatten(start_dim=1, end_dim=-1).to(torch.float64), dim=-1)
+            self.target_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64),
+            latents.flatten(start_dim=1, end_dim=-1).to(torch.float64), dim=-1)
 
         return cosine_similarity * 100
 
@@ -106,14 +105,14 @@ if __name__ == '__main__':
 
 
     optimizer_condition = gd_condition.get_optimizer(0.01, 'AdamOnLion')
-    optimizer_init_latents = gd_init_latents.get_optimizer(0.01, 'AdamOnLion')
+    optimizer_init_latents = gd_init_latents.get_optimizer(0.001, 'AdamOnLion')
 
     init_latents_dist_list = list()
     scores_list = list()
 
     initial_score = 0
 
-    for i in range(1000):
+    for i in range(600):
         if (i+1) % 2 != 0: #or score < initial_score + 0.5:
             gd_condition.initial_latents = torch.clone(gd_init_latents.initial_latents)
             optimizer_condition.zero_grad()
@@ -135,7 +134,8 @@ if __name__ == '__main__':
                 ).item(), 4)
             )
             if (i + 1) % 4 == 0:
-                pil_img1 = ldm.embedding_2_img('', gd_init_latents.get_text_embedding(), save_img=False)
+                #pil_img1 = ldm.embedding_2_img('', gd_init_latents.get_text_embedding(), save_img=False)
+                pil_img1 = ldm.latents_to_image(gd_init_latents.latents)[0]
                 pil_img1.save(f'output/B_{i}_{prompt[0:25]}_{round(score.item(), 3)}.jpg')
 #
             embedding = ldm.get_embedding([prompt])[0]
@@ -150,5 +150,5 @@ if __name__ == '__main__':
     print(scores_list)
     print(init_latents_dist_list)
 
-    plot_scores(scores_list, r'output/similarity_scores.jpg', x_label='Iterations')
-    plot_scores(init_latents_dist_list, r'output/init_latent_distances.jpg', x_label='Iterations')
+    plot_scores(scores_list, r'output/similarity_scores.jpg', x_label='Iterations', y_label='Cosine-Similarity')
+    plot_scores(init_latents_dist_list, r'output/init_latent_distances.jpg', x_label='Iterations', y_label='Cosine-Similarity')
