@@ -111,21 +111,43 @@ class StableDiffusion:
 
         cov = self.get_cov(X, Y)
 
+        max = torch.max(embedding1).item()
+        min = torch.min(embedding1).item()
+
         Z = (X + Y) * torch.sqrt(torch.std(embedding1) * torch.std(embedding2)) \
             / (torch.sqrt(torch.std(X) ** 2 + torch.std(Y) ** 2 + 2 * cov) + 1e-14)
+
+        Z = torch.clamp(Z, min, max)
+        return Z
+
+    def lerp(self, embedding1, embedding2, noise):
+        X = embedding1 * (1 - noise)
+        Y = embedding2 * noise
+
+        Z = (X + Y)
+
         return Z
 
     def set_initial_latents(self, dim):
         latents = torch.randn((1, self.unet.in_channels, dim // 8, dim // 8))
         return latents
 
-    def slerp(self, low, high, val):
-        low_norm = low / torch.norm(low, dim=1, keepdim=True)
-        high_norm = high / torch.norm(high, dim=1, keepdim=True)
-        omega = torch.acos((low_norm * high_norm).sum(1))
+    def slerp(self, embedding1, embedding2, val):
+        embedding1 = embedding1[0]
+        embedding2 = embedding2[0]
+        low_norm = embedding1 / torch.norm(embedding1, dim=1, keepdim=True)
+        high_norm = embedding2 / torch.norm(embedding2, dim=1, keepdim=True)
+        dot = (low_norm * high_norm).sum(1)
+        omega = torch.acos(dot)
         so = torch.sin(omega)
-        res = (torch.sin((1.0 - val) * omega) / so).unsqueeze(1) * low + (torch.sin(val * omega) / so).unsqueeze(
-            1) * high
+        faktor1 = (torch.sin((1.0 - val) * omega) / so).unsqueeze(1).unsqueeze(0)
+        if torch.isnan(faktor1[0, 0, 0]):
+            faktor1[0, 0, 0] = 0.5
+        faktor2 = (torch.sin(val * omega) / so).unsqueeze(
+            1).unsqueeze(0)
+        if torch.isnan(faktor2[0, 0, 0]):
+            faktor2[0, 0, 0] = 0.5
+        res = faktor1 * embedding1 + faktor2 * embedding2
         return res
 
 
