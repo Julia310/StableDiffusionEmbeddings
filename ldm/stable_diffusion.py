@@ -13,6 +13,7 @@ class StableDiffusion:
     def __init__(self, device="cuda"):
         self.device = device
         self.dtype = torch.float16
+        #self.dtype = torch.float
         if self.device == "cpu": self.dtype = torch.float
         self.scheduler = LMSDiscreteScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear",
                                               num_train_timesteps=1000)
@@ -39,6 +40,7 @@ class StableDiffusion:
             return text_encoded.float()
         else:
             return text_encoded.half()
+            #return text_encoded.float()
 
     def latents_to_image(self, latents, return_pil = True):
         '''
@@ -117,7 +119,7 @@ class StableDiffusion:
         Z = (X + Y) * torch.sqrt(torch.std(embedding1) * torch.std(embedding2)) \
             / (torch.sqrt(torch.std(X) ** 2 + torch.std(Y) ** 2 + 2 * cov) + 1e-14)
 
-        Z = torch.clamp(Z, min, max)
+        #Z = torch.clamp(Z, min, max)
         return Z
 
     def lerp(self, embedding1, embedding2, noise):
@@ -141,12 +143,17 @@ class StableDiffusion:
         omega = torch.acos(dot)
         so = torch.sin(omega)
         faktor1 = (torch.sin((1.0 - val) * omega) / so).unsqueeze(1).unsqueeze(0)
-        if torch.isnan(faktor1[0, 0, 0]):
-            faktor1[0, 0, 0] = 0.5
-        faktor2 = (torch.sin(val * omega) / so).unsqueeze(
-            1).unsqueeze(0)
-        if torch.isnan(faktor2[0, 0, 0]):
-            faktor2[0, 0, 0] = 0.5
+        mask = torch.isnan(faktor1)
+        mean = torch.mean(faktor1[~mask])
+        faktor1[mask] = mean
+        #if torch.isnan(faktor1[0, 0, 0]):
+        #    faktor1[0, 0, 0] = 0.5
+        faktor2 = (torch.sin(val * omega) / so).unsqueeze(1).unsqueeze(0)
+        mask = torch.isnan(faktor2)
+        mean = torch.mean(faktor2[~mask])
+        faktor2[mask] = mean
+        #if torch.isnan(faktor2[0, 0, 0]):
+        #    faktor2[0, 0, 0] = 0.5
         res = faktor1 * embedding1 + faktor2 * embedding2
         return res
 
@@ -172,6 +179,7 @@ class StableDiffusion:
             latents = latents.to(self.device).float() * self.scheduler.init_noise_sigma
         else:
             latents = latents.to(self.device).half() * self.scheduler.init_noise_sigma
+            #latents = latents.to(self.device).float() * self.scheduler.init_noise_sigma
 
 
         # Iterating through defined steps
