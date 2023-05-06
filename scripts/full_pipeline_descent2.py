@@ -23,59 +23,11 @@ ldm = StableDiffusion(device=device)
 
 prompt = 'Single Color Ball'
 
-class GradientDescent(torch.nn.Module):
-    def __init__(self, condition, target_latents, comb_init_latents):
-        super().__init__()
-        self.condition = condition
-        self.initial_latents = comb_init_latents
-        self.uncondition = ldm.text_enc([""], self.condition.shape[1])
-        self.latents = None
-        self.target_latents = target_latents
 
-    def set_torch_parameter(self, condition=False):
-        if condition:
-            self.condition = torch.nn.Parameter(self.condition)
-            self.condition.requires_grad = True
-        else:
-            self.initial_latents = torch.nn.Parameter(self.initial_latents)
-            self.initial_latents.requires_grad = True
-
-    def get_text_embedding(self):
-        return torch.cat([self.uncondition, self.condition])
-
-    def forward(self):
-        ldm.initial_latents = self.initial_latents
-        latents = ldm.embedding_2_img('', self.get_text_embedding(), save_img=False, dim=dim, return_pil=False,
-                                      return_latents=True, keep_init_latents=True)
-
-        self.latents = latents
-
-        cosine_similarity = torch.nn.functional.cosine_similarity(
-            self.target_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64),
-            latents.flatten(start_dim=1, end_dim=-1).to(torch.float64), dim=-1)
-
-        return cosine_similarity * 100
-
-    def get_optimizer(self, eta, optim='SGD'):
-        if optim == 'SGD':
-            return torch.optim.SGD(
-                self.parameters(),
-                lr=eta,
-                momentum=0.95,
-                nesterov=True
-            )
-        elif optim == 'AdamTorch':
-            return torch.optim.Adam(
-                self.parameters(),
-                lr=eta
-                # eps=0.00000001
-            )
-        else:
-            return AdamOnLion(
-                params=self.parameters(),
-                lr=eta,
-                eps=0.001,
-            )
+def get_shifted_embedding(text_embedding, default_std, default_mean):
+    shifted_text_embedding = text_embedding / (torch.std(text_embedding)) * default_std
+    shifted_text_embedding = shifted_text_embedding - torch.mean(shifted_text_embedding) + default_mean
+    return shifted_text_embedding
 
 
 class GradientDescent(torch.nn.Module):
@@ -112,6 +64,7 @@ class GradientDescent(torch.nn.Module):
         return cosine_similarity * 100
 
     def get_optimizer(self, eta, optim='SGD'):
+
         if optim == 'SGD':
             return torch.optim.SGD(
                 self.parameters(),
