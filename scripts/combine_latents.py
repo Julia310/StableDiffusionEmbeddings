@@ -28,6 +28,11 @@ prompt2 = "ethiopian landscape, highly detailed, digital painting, concept art, 
 
 #prompt2 = "Golden treehouse in lush forest, better homes and hardens magazine, big glass windows, intricate woodworking, polaroid"
 
+prompt2 = 'pixar style, blue cartoon hummingbird mascot with adorable eyes, friendly, waving to the camera, cinematic lighting'
+
+seed = 797248
+seed2 = 253808
+
 dim = 512
 
 ldm = StableDiffusion(device=device)
