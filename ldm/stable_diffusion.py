@@ -206,7 +206,5 @@ class StableDiffusion:
 
         # Saving image
         if save_img:
-            if not os.path.exists(f'./steps'):
-                os.mkdir(f'./steps')
             pil_image.save(f'output/{prompt[0:45]}.jpg')
         return pil_image
