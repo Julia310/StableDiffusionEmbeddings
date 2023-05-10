@@ -11,17 +11,17 @@ dim = 512
 
 #seed = 724839
 
-seed = 683395
-seed2 = 417016
+#seed = 683395
+#seed2 = 417016
 
 device = 'cuda'
 
 ldm = StableDiffusion(device=device)
 
-#prompt = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
-#         'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
+prompt = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
+         'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 
-prompt = 'Single Color Ball'
+#prompt = 'Single Color Ball'
 
 
 def get_shifted_embedding(text_embedding, default_std, default_mean):
@@ -38,6 +38,8 @@ class GradientDescent(torch.nn.Module):
         self.uncondition = ldm.text_enc([""], self.condition.shape[1])
         self.latents = None
         self.target_latents = target_latents
+        self.default_std = None
+        self.default_mean = None
 
     def set_torch_parameter(self, condition=False):
         if condition:
@@ -48,6 +50,10 @@ class GradientDescent(torch.nn.Module):
             self.initial_latents.requires_grad = True
 
     def get_text_embedding(self):
+        if self.default_mean is None:
+            self.default_mean = torch.mean(self.condition)
+            self.default_std = torch.std(self.condition)
+        get_shifted_embedding(self.condition, self.default_std, self.default_mean)
         return torch.cat([self.uncondition, self.condition])
 
     def forward(self):
@@ -98,7 +104,8 @@ if __name__ == '__main__':
         ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], dim=dim, seed=seed2, return_latents=True, keep_init_latents=False)
         latents = torch.clone(ldm.initial_latents)
 
-    combined_init_latents = ldm.combine_embeddings(target_init_latents, latents, 0.01)
+    #combined_init_latents = ldm.combine_embeddings(target_init_latents, latents, 0.01)
+    combined_init_latents = latents
 
     print(round(100 * torch.nn.functional.cosine_similarity(
                     target_init_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64),
@@ -120,8 +127,8 @@ if __name__ == '__main__':
 
     initial_score = 0
 
-    for i in range(700):
-        if (i+1) % 2 != 0:# or score < initial_score + 0.5:
+    for i in range(100):
+        if i >= 0:# or score < initial_score + 0.5:
             gd_condition.initial_latents = torch.clone(gd_init_latents.initial_latents)
             optimizer_condition.zero_grad()
             score = gd_condition.forward()
@@ -129,7 +136,7 @@ if __name__ == '__main__':
             loss = -score
             loss.backward(retain_graph=True)
             optimizer_condition.step()
-            #pil_img = ldm.latents_to_image(gd_condition.latents)[0]
+            pil_img = ldm.latents_to_image(gd_condition.latents)[0]
         else:
             gd_init_latents.condition = torch.clone(gd_condition.condition)
             optimizer_init_latents.zero_grad()
@@ -148,7 +155,7 @@ if __name__ == '__main__':
             optimizer_init_latents.step()
             #pil_img = ldm.latents_to_image(gd_init_latents.latents)[0]
 
-        #pil_img.save(f'output/{i}_{prompt[0:25]}_{round(score.item(), 3)}.jpg')
+        pil_img.save(f'output/{i}_{prompt[0:25]}_{round(score.item(), 3)}.jpg')
     print(scores_list)
     print(init_latents_dist_list)
 
