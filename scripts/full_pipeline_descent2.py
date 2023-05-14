@@ -104,8 +104,8 @@ if __name__ == '__main__':
         ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], dim=dim, seed=seed2, return_latents=True, keep_init_latents=False)
         latents = torch.clone(ldm.initial_latents)
 
-    #combined_init_latents = ldm.combine_embeddings(target_init_latents, latents, 0.01)
-    combined_init_latents = latents
+    combined_init_latents = ldm.combine_embeddings(target_init_latents, latents, 0.05)
+    #combined_init_latents = latents
 
     print(round(100 * torch.nn.functional.cosine_similarity(
                     target_init_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64),
@@ -127,8 +127,8 @@ if __name__ == '__main__':
 
     initial_score = 0
 
-    for i in range(100):
-        if i >= 0:# or score < initial_score + 0.5:
+    for i in range(400):
+        if (i+1) % 2 != 0: #i >= 0:
             gd_condition.initial_latents = torch.clone(gd_init_latents.initial_latents)
             optimizer_condition.zero_grad()
             score = gd_condition.forward()
@@ -136,7 +136,7 @@ if __name__ == '__main__':
             loss = -score
             loss.backward(retain_graph=True)
             optimizer_condition.step()
-            pil_img = ldm.latents_to_image(gd_condition.latents)[0]
+            #pil_img = ldm.latents_to_image(gd_condition.latents)[0]
         else:
             gd_init_latents.condition = torch.clone(gd_condition.condition)
             optimizer_init_latents.zero_grad()
@@ -155,9 +155,11 @@ if __name__ == '__main__':
             optimizer_init_latents.step()
             #pil_img = ldm.latents_to_image(gd_init_latents.latents)[0]
 
-        pil_img.save(f'output/{i}_{prompt[0:25]}_{round(score.item(), 3)}.jpg')
-    print(scores_list)
-    print(init_latents_dist_list)
+
+            print(f'std: {torch.std(gd_init_latents.initial_latents)}, mean: {torch.mean(gd_init_latents.initial_latents)}')
+        #pil_img.save(f'output/{i}_{prompt[0:25]}_{round(score.item(), 3)}.jpg')
+    #print(scores_list)
+    #print(init_latents_dist_list)
 
     plot_scores(scores_list, r'output/similarity_scores.jpg', x_label='Iterations', y_label='Cosine-Similarity')
     plot_scores(init_latents_dist_list, r'output/init_latent_distances.jpg', x_label='Iterations', y_label='Cosine-Similarity')
