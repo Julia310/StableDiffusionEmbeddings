@@ -161,11 +161,6 @@ class StableDiffusion:
     def set_initial_latents(self, dim):
         latents = torch.randn((1, self.unet.in_channels, dim // 8, dim // 8))
 
-        # Adding noise to the latents
-        if self.device == "cpu":
-            latents = latents.to(self.device).float() * self.scheduler.init_noise_sigma
-        else:
-            latents = latents.to(self.device).half() * self.scheduler.init_noise_sigma
         return latents
 
     def embedding_2_img(self, prompt, emb, keep_init_latents=True, return_latents=False, return_pil=True, dim=512, g=7.5, seed=61582, steps=70, save_img=True):
@@ -183,14 +178,20 @@ class StableDiffusion:
         if self.initial_latents is None: self.initial_latents = self.set_initial_latents(dim=dim)
         latents = torch.clone(self.initial_latents)
 
+        # Adding noise to the latents
+        if self.device == "cpu":
+            latents = latents.to(self.device).float() * self.scheduler.init_noise_sigma
+        else:
+            latents = latents.to(self.device).half() * self.scheduler.init_noise_sigma
+
         # Iterating through defined steps
         for i, ts in enumerate(tqdm(self.scheduler.timesteps)):
             # We need to scale the i/p latents to match the variance
             inp = self.scheduler.scale_model_input(torch.cat([latents] * 2), ts)
 
             # Predicting noise residual using U-Net
-            if i < steps-1:
-            #if i != 0:
+            #if i < steps-1:
+            if i != 0:
                 with torch.no_grad():
                     u, t = self.unet(inp, ts, encoder_hidden_states=emb).sample.chunk(2)
             else:
@@ -201,8 +202,8 @@ class StableDiffusion:
 
             # Conditioning  the latents
             latents = self.scheduler.step(pred, ts, latents).prev_sample
-            if return_latents and i == steps-1:
-            #if return_latents and i == 0:
+            #if return_latents and i == steps-1:
+            if return_latents and i == 0:
                 return latents
 
         if not return_pil: return latents
