@@ -138,6 +138,7 @@ def add_to_history(previously_chosen, previous_image, current_image, val):
 
 
 def get_tsne_image():
+    #current_condition_flattened = [current_condition[:, :, -1, :].flatten()]
     current_condition_flattened = [current_condition.flatten()]
     flattened_conditions = [tensor.flatten() for tensor in condition_list] + current_condition_flattened
     concatenated_tensor = torch.stack(flattened_conditions, dim=0)
@@ -147,6 +148,7 @@ def get_tsne_image():
     perplexity = numpy_array.shape[0] - 1
 
     # Perform t-SNE on the NumPy array
+    # https://umap-learn.readthedocs.io/en/latest/
     tsne = TSNE(n_components=2, perplexity=perplexity)
     embedded_array = tsne.fit_transform(numpy_array)
 
