@@ -9,7 +9,8 @@ seed = 61582
 seed2 = 615845
 seed3 = 82641
 dim = 512
-
+seed = 683395
+seed2 = 417016
 
 #seed = 724839
 
@@ -82,31 +83,26 @@ class GradientDescent(torch.nn.Module):
         latents = ldm.embedding_2_img('', self.get_text_embedding(), save_img=False, dim=dim, return_pil=False,
                                       return_latents=True, keep_init_latents=True)
 
-        match region_indices:
-            case "every 4":
-                target_latents =  self.target_latents[:, :, ::4, ::4]
-                latents = latents[:, :, ::4, ::4]
-            case "every 4 alternating":
-                target_latents = self.target_latents[:, :, i % 4::4, i % 4::4]
-                latents = latents[:, :, i % 4::4, i % 4::4]
-            case "center":
-                target_latents = self.target_latents[:, :, 30:34, 30:34]
-                latents = latents[:, :, 30:34, 30:34]
+        if region_indices == "every 4":
+            target_latents = self.target_latents[:, :, ::4, ::4]
+            latents = latents[:, :, ::4, ::4]
+        elif region_indices == "every 4 alternating":
+            target_latents = self.target_latents[:, :, i % 4::4, i % 4::4]
+            latents = latents[:, :, i % 4::4, i % 4::4]
+        elif region_indices == "center":
+            target_latents = self.target_latents[:, :, 30:34, 30:34]
+            latents = latents[:, :, 30:34, 30:34]
+        else:
+            target_latents = self.target_latents
 
-            case "complete":
-                target_latents = self.target_latents
-
-        #self.latents = latents
-
-        match metric:
-            case 'Euclidean Distance':
-                score = torch.dist(
-                    target_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64),
-                    latents.flatten(start_dim=1, end_dim=-1).to(torch.float64))
-            case 'Cosine Similarity':
-                score = 10000 * torch.nn.functional.cosine_similarity(
-                    target_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64),
-                    latents.flatten(start_dim=1, end_dim=-1).to(torch.float64), dim=-1)
+        if metric == 'Euclidean Distance':
+            score = torch.dist(
+                target_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64),
+                latents.flatten(start_dim=1, end_dim=-1).to(torch.float64))
+        else:
+            score = 10000 * torch.nn.functional.cosine_similarity(
+                target_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64),
+                latents.flatten(start_dim=1, end_dim=-1).to(torch.float64), dim=-1)
 
         return score
 
@@ -154,6 +150,8 @@ if __name__ == '__main__':
         for region in ['complete', 'every 4', 'every 4 alternating', 'center']:
             for mod in [2, 10]:
                 for learning_rates in [(10, 0.001), (1, 0.001) ,(0.01, 0.001), (0.1, 0.001), (0.01, 0.0001), (0.1, 0.0001), (1, 0.0001), (10, 0.0001)]:
+                    #if mod == 2 or region != 'center': continue
+                    if mod == 2 or score_metric == 'Euclidean Distance' or region != 'every 4 alternating' or learning_rates[0] != 0.01 or learning_rates[1] != 0.0001: continue
                     lr_latents = learning_rates[1]
                     lr_cond = learning_rates[0]
 
@@ -183,7 +181,7 @@ if __name__ == '__main__':
                     cnt = 0
 
 
-                    for i in range(mod * 35):
+                    for i in range(mod * 100):
                         cnt += 1
                         cnt = cnt % mod
                         if (i+1) % mod != 0: #i >= 0:

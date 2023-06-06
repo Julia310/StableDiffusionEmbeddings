@@ -1,15 +1,16 @@
 from ldm.stable_diffusion import StableDiffusion
 from optimizer.adam_on_lion import AdamOnLion
 import torch
+from utils.create_graphics import plot_scores
 import matplotlib.pyplot as plt
 import os
-from utils.create_graphics import plot_scores
 
 seed = 61582
 seed2 = 615845
 seed3 = 82641
 dim = 512
-
+seed = 683395
+seed2 = 417016
 
 #seed = 724839
 
@@ -61,8 +62,8 @@ class GradientDescent(torch.nn.Module):
         self.uncondition = ldm.text_enc([""], condition.shape[1])
         self.latents = None
         self.target_latents = target_latents
-        self.default_std = torch.mean(self.condition)
-        self.default_mean = torch.std(self.condition)
+        self.default_std = torch.std(condition[:, 1:, :])
+        self.default_mean = torch.mean(condition[:, 1:, :])
 
     def set_torch_parameter(self, condition=False):
         if condition:
@@ -73,9 +74,8 @@ class GradientDescent(torch.nn.Module):
             self.initial_latents.requires_grad = True
 
     def get_text_embedding(self):
-        #shifted_cond = get_shifted_embedding(self.condition, self.default_std, self.default_mean)
-        cond = torch.cat((self.condition_row.unsqueeze(dim=1), self.condition), dim=1)
-        #cond = torch.cat((self.condition_row.unsqueeze(dim=1), shifted_cond), dim=1)
+        condition = self.condition
+        cond = torch.cat((self.condition_row.unsqueeze(dim=1), condition), dim=1)
         return torch.cat([self.uncondition, cond])
 
     def forward(self, i, region_indices, metric):
@@ -94,8 +94,6 @@ class GradientDescent(torch.nn.Module):
             latents = latents[:, :, 30:34, 30:34]
         else:
             target_latents = self.target_latents
-
-        # self.latents = latents
 
         if metric == 'Euclidean Distance':
             score = torch.dist(
@@ -151,8 +149,10 @@ if __name__ == '__main__':
     for score_metric in ['Cosine Similarity', 'Euclidean Distance']:
         for region in ['complete', 'every 4', 'every 4 alternating', 'center']:
             for mod in [2, 10]:
-                for learning_rates in [(10, 0.001), (1, 0.001) ,(0.01, 0.001), (0.1, 0.001), (0.01, 0.0001), (0.1, 0.0001), (1, 0.0001), (10, 0.0001)]:
-                    if score_metric == 'Cosine Similarity' and region in ['complete', 'every 4']: continue
+                for learning_rates in [(100, 0.001), (10, 0.001), (1, 0.001), (0.01, 0.001), (0.1, 0.001),
+                                       (0.01, 0.0001),
+                                       (0.1, 0.0001), (1, 0.0001), (10, 0.0001), (100, 0.0001)]:
+
                     lr_latents = learning_rates[1]
                     lr_cond = learning_rates[0]
 
@@ -169,7 +169,7 @@ if __name__ == '__main__':
                     max_score = -100000
                     if score_metric == 'Euclidean Distance': max_score = 100000
 
-                    """gd_condition = GradientDescent(ldm.text_enc([prompt]), target_latents, combined_init_latents)
+                    gd_condition = GradientDescent(ldm.text_enc([prompt]), target_latents, combined_init_latents)
                     gd_condition.set_torch_parameter(condition=True)
                     gd_init_latents = GradientDescent(ldm.text_enc([prompt]), target_latents, combined_init_latents)
                     gd_init_latents.set_torch_parameter()
@@ -179,10 +179,10 @@ if __name__ == '__main__':
 
                     init_latents_dist_list = list()
                     scores_list = list()
-                    cnt = 0"""
+                    cnt = 0
 
 
-                    """for i in range(mod * 35):
+                    for i in range(mod * 100):
                         cnt += 1
                         cnt = cnt % mod
                         if (i+1) % mod != 0: #i >= 0:
@@ -257,6 +257,7 @@ if __name__ == '__main__':
 
                             print('shift latents')
                             gd_init_latents.initial_latents  = torch.nn.Parameter(get_shifted_embedding(gd_init_latents.initial_latents, init_lat_std, init_lat_mean))
+                            gd_init_latents.initial_latents.requires_grad = True
                             optimizer_init_latents = gd_init_latents.get_optimizer(lr_latents, 'AdamOnLion')
                             #optimizer_init_latents.params = gd_init_latents.parameters()
 
@@ -275,4 +276,4 @@ if __name__ == '__main__':
 
                     plot_scores(init_latents_dist_list, f'output/condition/{dir_num}/init_latent_distances.jpg', x_label='Iterations', y_label=score_metric)
                     plot_scores(scores_list, f'output/condition/{dir_num}/similarity_scores.jpg', x_label='Iterations', y_label=score_metric)
-                    plt.clf()"""
+                    plt.clf()
