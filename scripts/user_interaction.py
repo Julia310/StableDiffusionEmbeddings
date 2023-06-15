@@ -3,8 +3,10 @@ import torch
 from ldm.stable_diffusion import StableDiffusion
 from utils.image_generation import create_random_prompts, create_prompts
 from matplotlib.backends.backend_agg import FigureCanvasAgg
+from sklearn.preprocessing import StandardScaler
 from PIL import Image, ImageDraw
 from sklearn.manifold import TSNE
+from umap import UMAP
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -25,10 +27,14 @@ image_history_interpolation_valie = [[None, None]] * 5
 interpolation_val = [[None, None, None]] * 5
 condition_list = [None] * 5
 
+no_of_selections = 0
 
 def init_pipeline_params(prompt, seed):
     global uncondition, current_gd_image, current_condition, condition_list
     global image_list, global_prompt, global_seed, current_image
+    global no_of_selections
+
+    no_of_selections = 0
 
     global_prompt = prompt
     global_seed = seed
@@ -50,7 +56,7 @@ def init_pipeline_params(prompt, seed):
     text = 'Initialization completed. Switch to Image Selection Tab.'
 
     return image_list[0], image_list[1], image_list[2], image_list[3], image_list[4], \
-        current_image, text, get_tsne_image()
+        current_image, text, create_dim_reduction_plot()
 
 
 def compute_dot(cond_A, cond_B):
@@ -137,20 +143,34 @@ def add_to_history(previously_chosen, previous_image, current_image, val):
     print('')
 
 
-def get_tsne_image():
-    #current_condition_flattened = [current_condition[:, :, -1, :].flatten()]
-    current_condition_flattened = [current_condition.flatten()]
-    flattened_conditions = [tensor.flatten() for tensor in condition_list] + current_condition_flattened
-    concatenated_tensor = torch.stack(flattened_conditions, dim=0)
-    numpy_array = concatenated_tensor.detach().cpu().numpy()
-
+def tsne_dim_reduction(numpy_array):
     # Adjust the perplexity value
     perplexity = numpy_array.shape[0] - 1
 
     # Perform t-SNE on the NumPy array
-    # https://umap-learn.readthedocs.io/en/latest/
     tsne = TSNE(n_components=2, perplexity=perplexity)
     embedded_array = tsne.fit_transform(numpy_array)
+    return embedded_array
+
+
+def umap_dim_reduction(numpy_array):
+    # Scale the data using StandardScaler
+    numpy_array = StandardScaler().fit_transform(numpy_array)
+
+    # Perform UMAP on the NumPy array
+    umap = UMAP(n_components=2, n_neighbors=numpy_array.shape[0] - 1, min_dist=1., spread=1., metric='euclidean')
+    embedded_array = umap.fit_transform(numpy_array)
+    return embedded_array
+
+
+def create_dim_reduction_plot():
+    current_condition_flattened = [current_condition[:, -1, :].flatten()]
+    flattened_conditions = [tensor[:, -1, :].flatten() for tensor in condition_list] + current_condition_flattened
+    concatenated_tensor = torch.stack(flattened_conditions, dim=0)
+    numpy_array = concatenated_tensor.detach().cpu().numpy()
+
+    embedded_array = tsne_dim_reduction(numpy_array)
+    #embedded_array = umap_dim_reduction(numpy_array)
 
     # Separate the first element from the rest
     first_element = embedded_array[-1]
@@ -169,8 +189,8 @@ def get_tsne_image():
     ax.set_ylim(np.min(embedded_array[:, 1]) - 10, np.max(embedded_array[:, 1]) + 10)
 
     # Add labels and legend
-    ax.set_xlabel('t-SNE Dimension 1')
-    ax.set_ylabel('t-SNE Dimension 2')
+    ax.set_xlabel('Dimension 1')
+    ax.set_ylabel('Dimension 2')
     ax.legend()
 
     # Render the plot onto a canvas
@@ -185,7 +205,9 @@ def get_tsne_image():
 
 
 def update_images(choice, selection_effect):
-    global image_list, current_image, previous_image
+    global image_list, current_image, previous_image, no_of_selections
+
+    no_of_selections += 1
 
     previously_chosen = update_user_prompt(choice, selection_effect)
 
@@ -198,22 +220,24 @@ def update_images(choice, selection_effect):
     )
 
     image_list = [None] * 5
+    no_selections_list = ['# <p style="text-align: center;">' + str(no_of_selections - i) + '</p>'
+                          if no_of_selections - i > 0 else None for i in range(5)]
 
     get_images_for_selection()
 
     add_to_history(previously_chosen, previous_image, current_image, selection_effect)
     return image_list[0], image_list[1], image_list[2], image_list[3], image_list[4], current_image, \
-        image_history[0][0], image_history[0][1], image_history[0][2], \
+        no_selections_list[0], image_history[0][0], image_history[0][1], image_history[0][2], \
         f'<p style="text-align: center;">{interpolation_val[0][0]}</p>', f'<p style="text-align: center;">{interpolation_val[0][1]}</p>', \
-        image_history[1][0], image_history[1][1], image_history[1][2], \
+        no_selections_list[1], image_history[1][0], image_history[1][1], image_history[1][2], \
         f'<p style="text-align: center;">{interpolation_val[1][0]}</p>', f'<p style="text-align: center;">{interpolation_val[1][1]}</p>', \
-        image_history[2][0], image_history[2][1], image_history[2][2], \
+        no_selections_list[2], image_history[2][0], image_history[2][1], image_history[2][2], \
         f'<p style="text-align: center;">{interpolation_val[2][0]}</p>', f'<p style="text-align: center;">{interpolation_val[2][1]}</p>', \
-        image_history[3][0], image_history[3][1], image_history[3][2], \
+        no_selections_list[3], image_history[3][0], image_history[3][1], image_history[3][2], \
         f'<p style="text-align: center;">{interpolation_val[3][0]}</p>', f'<p style="text-align: center;">{interpolation_val[3][1]}</p>', \
-        image_history[4][0], image_history[4][1], image_history[4][2], \
+        no_selections_list[4], image_history[4][0], image_history[4][1], image_history[4][2], \
         f'<p style="text-align: center;">{interpolation_val[4][0]}</p>', f'<p style="text-align: center;">{interpolation_val[4][1]}</p>', \
-        get_tsne_image()
+        create_dim_reduction_plot()
 
 
 
@@ -277,55 +301,83 @@ with gr.Blocks() as demo:
 
     with gr.Tab("3. History"):
         with gr.Row():
-            gr.Markdown(
-                """
-                # Selected
-                """)
-            gr.Markdown(
-                """
-                # Previous 
-                """)
-            gr.Markdown(
-                """
-                # Updated
-                """)
+            with gr.Column(scale=0, min_width=100):
+                gr.Markdown(
+                    """
+                    # <p style="text-align: center;">Iteration</p>
+                    """)
+            with gr.Column():
+                gr.Markdown(
+                    """
+                    # <p style="text-align: center;">Previous</p>
+                    """)
+            with gr.Column():
+                gr.Markdown(
+                    """
+                    # <p style="text-align: center;">Selected</p>
+                    """)
+            with gr.Column():
+                gr.Markdown(
+                    """
+                    # <p style="text-align: center;">Updated</p>
+                    """)
         with gr.Row():
-            previous_image_1 = gr.Image(interactive=True)
-            previous_choice_1 = gr.Image(interactive=True)
+            with gr.Column(scale=0, min_width=100):
+                iteration1 = gr.Markdown()
+            previous_image1 = gr.Image(interactive=True)
+            previous_choice1 = gr.Image(interactive=True)
             image_1 = gr.Image(interactive=True)
         with gr.Row():
+            with gr.Column(scale=0, min_width=100):
+                pass
             markdown1 = gr.Markdown()
             markdown2 = gr.Markdown()
             markdown3 = gr.Markdown()
         with gr.Row():
+            with gr.Column(scale=0, min_width=100):
+                iteration2 = gr.Markdown()
             previous_image2 = gr.Image(interactive=True)
             previous_choice2 = gr.Image(interactive=True)
             image2 = gr.Image(interactive=True)
         with gr.Row():
+            with gr.Column(scale=0, min_width=100):
+                pass
             markdown4 = gr.Markdown()
             markdown5 = gr.Markdown()
             markdown6 = gr.Markdown()
         with gr.Row():
+            with gr.Column(scale=0, min_width=100):
+                iteration3 = gr.Markdown()
             previous_image3 = gr.Image(interactive=True)
             previous_choice3 = gr.Image(interactive=True)
             image3 = gr.Image(interactive=True)
         with gr.Row():
+            with gr.Column(scale=0, min_width=100):
+                pass
             markdown7 = gr.Markdown()
             markdown8 = gr.Markdown()
             markdown9 = gr.Markdown()
         with gr.Row():
+            with gr.Column(scale=0, min_width=100):
+                iteration4 = gr.Markdown()
             previous_image4 = gr.Image(interactive=True)
             previous_choice4 = gr.Image(interactive=True)
             image4 = gr.Image(interactive=True)
         with gr.Row():
+            with gr.Column(scale=0, min_width=100):
+                pass
             markdown10 = gr.Markdown()
             markdown11 = gr.Markdown()
             markdown12 = gr.Markdown()
         with gr.Row():
+            with gr.Column(scale=0, min_width=100):
+                iteration5 = gr.Markdown()
             previous_image5 = gr.Image(interactive=True)
             previous_choice5 = gr.Image(interactive=True)
             image5 = gr.Image(interactive=True)
         with gr.Row():
+            with gr.Column(scale=0, min_width=100):
+                pass
             markdown13 = gr.Markdown()
             markdown14 = gr.Markdown()
             markdown15 = gr.Markdown()
@@ -345,16 +397,16 @@ with gr.Blocks() as demo:
         update_images,
         inputs=[choice, selection_effect],
         outputs=[gr_image1, gr_image2, gr_image3, gr_image4, gr_image5, curr_image,
-                 previous_image_1, previous_choice_1, image_1,
-                 markdown1, markdown2,
-                 previous_image2, previous_choice2, image2,
-                 markdown4, markdown5,
-                 previous_image3, previous_choice3, image3,
-                 markdown7, markdown8,
-                 previous_image4, previous_choice4, image4,
-                 markdown10, markdown11,
-                 previous_image5, previous_choice5, image5,
-                 markdown13, markdown14,
+                 iteration1, previous_choice1, previous_image1, image_1,
+                 markdown2, markdown1,
+                 iteration2, previous_choice2, previous_image2, image2,
+                 markdown5, markdown4,
+                 iteration3, previous_choice3, previous_image3, image3,
+                 markdown8, markdown7,
+                 iteration4, previous_choice4, previous_image4, image4,
+                 markdown11, markdown10,
+                 iteration5, previous_choice5, previous_image5, image5,
+                 markdown14, markdown13,
                  image_tsne
                  ]
     )
