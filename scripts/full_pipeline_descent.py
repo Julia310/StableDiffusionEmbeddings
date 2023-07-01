@@ -5,9 +5,10 @@ from torchvision.transforms import CenterCrop, Resize, Normalize, InterpolationM
 from optimizer.adam_on_lion import AdamOnLion
 from torch.nn import functional as F
 from time import time
-
+from utils.file_utils import make_dir
+import os
 seed = 61582
-seed = 9373462
+#seed = 9373462
 dim = 512
 
 device = 'cuda'
@@ -18,7 +19,10 @@ aesthetic_predictor = AestheticPredictor(device=device)
 prompt1 = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
          'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 
-prompt1 = 'a painting of dubrovnik in the style of josip skerlj'
+prompt1 = "bride and groom, high symmetry, intimacy, realism, intricate abstract, elegant, looking down a cliff, long " \
+          "perspective, neutral colors, dark lighting, by artstation, by greg rutkowski "
+
+#prompt1 = 'a painting of dubrovnik in the style of josip skerlj'
 
 
 #prompt2 = "ugly meme, funniest thing ever"
@@ -28,7 +32,32 @@ prompt1 = 'a painting of dubrovnik in the style of josip skerlj'
 #         "indoor lighting, artstation, detailed, digital painting,cinematic,character design by mark ryden and pixar " \
 #         "and hayao miyazaki, unreal 5, daz, hyperrealistic, octane render"
 
-#prompts = [prompt1, prompt2, prompt3]
+
+def create_next_directory(directory):
+    image_directories = []
+
+    for item in os.listdir(directory):
+        item_path = os.path.join(directory, item)
+        if os.path.isdir(item_path) and item.startswith("image"):
+            image_num = item.replace("image", "")
+            if image_num.isdigit():
+                image_directories.append(int(image_num))
+
+    if image_directories:
+        next_number = max(image_directories) + 1
+    else:
+        next_number = 1
+
+    new_directory_name = "image" + str(next_number)
+    new_directory_path = os.path.join(directory, new_directory_name)
+    os.mkdir(new_directory_path)
+
+    return new_directory_name
+
+with open('./scripts/prompts1.txt', 'r', encoding='utf-8') as file:
+    prompts = file.readlines()
+    prompts = [line.strip() for line in prompts]  # Remove leading/trailing whitespace and newlines
+prompts = [prompt1]
 
 
 def compute_blurriness(image):
@@ -45,7 +74,7 @@ def compute_blurriness(image):
     # Compute the variance of the Laplacian filter response
     variance = torch.var(filtered_image)
 
-    return variance
+    return variance * 100
 
 
 def compute_metric(image):
@@ -64,6 +93,12 @@ def compute_metric(image):
     variance = torch.var(filtered_image)
 
     return variance
+
+
+def get_shifted_embedding(text_embedding, default_std, default_mean):
+    shifted_text_embedding = text_embedding / (torch.std(text_embedding)) * default_std
+    shifted_text_embedding = shifted_text_embedding - torch.mean(shifted_text_embedding) + default_mean
+    return shifted_text_embedding
 
 
 def grayscale(image):
@@ -90,14 +125,29 @@ def preprocess(rgb):
 
 
 class GradientDescent(torch.nn.Module):
-    def __init__(self, text_embedding):
+    def __init__(self, condition):
         super().__init__()
-        self.text_embedding = torch.nn.Parameter(text_embedding)
-        self.text_embedding.requires_grad = True
+        self.condition_row = condition[:, 0, :]
+        self.condition = torch.nn.Parameter(condition[:, 1:, :])
+        self.uncondition = torch.nn.Parameter(ldm.text_enc([""], condition.shape[1])[:, 1:, :])
+        self.condition.requires_grad = True
+        self.uncondition.requires_grad = True
         self.latents = None
+        self.default_cond_std = torch.std(condition[:, 1:, :])
+        self.default_cond_mean = torch.mean(condition[:, 1:, :])
+        self.default_uncond_std = torch.std(self.uncondition)
+        self.default_uncond_mean = torch.mean(self.uncondition)
+
+
+
+    def get_text_embedding(self):
+        cond = torch.cat((self.condition_row.unsqueeze(dim=1), self.condition), dim=1)
+        uncond = torch.cat((self.condition_row.unsqueeze(dim=1), self.uncondition), dim=1)
+        return torch.cat([uncond, cond])
+
 
     def forward(self, g=7.5, steps=70):
-        latents = ldm.embedding_2_img('', self.text_embedding, dim=dim, seed=seed, return_pil=False, g=g, steps=steps)
+        latents = ldm.embedding_2_img('', self.get_text_embedding(), dim=dim, seed=seed, return_pil=False, g=g, steps=steps)
         self.latents = latents
         image = ldm.latents_to_image(latents, return_pil=False)
 
@@ -105,7 +155,6 @@ class GradientDescent(torch.nn.Module):
         image_embedding = aesthetic_predictor.clip.encode_image(image).float()
         image_embedding = aesthetic_predictor.get_features(image_embedding, image_input=False)
         score = aesthetic_predictor.mlp(image_embedding).squeeze()
-        print(score)
 
         return score
 
@@ -131,48 +180,75 @@ class GradientDescent(torch.nn.Module):
             )
 
 
-
 if __name__ == '__main__':
 
+
     start = time()
-    prompt = prompt1
-    gradient_descent = GradientDescent(ldm.get_embedding([prompt])[0])
 
     eta = 0.01
-    num_images = 700
+    num_images = 500
 
-    optimizer = gradient_descent.get_optimizer(eta, 'AdamOnLion')
+    for prompt in prompts:
+        gradient_descent = GradientDescent(ldm.text_enc([prompt]))
+        optimizer = gradient_descent.get_optimizer(eta, 'AdamOnLion')
+        make_dir(f'./output/evaluation/metric_based/{prompt[0:45].strip()}')
+        image_dir = create_next_directory(f'./output/evaluation/metric_based/{prompt[0:45].strip()}')
+        score_list = list()
+        max_score = 0
+        max_latents = None
 
-    score = 0
-    cnt = 0
-    for i in range(num_images):
-    #while score < 6.93 and cnt < 350 or score < 7.1:
-        optimizer.zero_grad()
-        score = gradient_descent.forward(steps=70)
+        for i in range(num_images):
+            print(f'Iteration: {i}')
+        #while score < 6.93 and cnt < 350 or score < 7.1:
+            optimizer.zero_grad()
+            score = gradient_descent.forward(steps=70)
+            score_list.append(score.item())
+
+            pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
+            pil_image.save(
+                f'output/evaluation/metric_based/{prompt[0:45].strip()}/{image_dir}/{i}_{prompt[0:45].strip()}_{round(score.item(), 4)}.jpg')
+            if score.item() > max_score:
+                max_score = score.item()
+                max_latents = torch.clone(gradient_descent.latents)
+            loss = -score
+
+            if i == 0:
+                pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
+                pil_image.save(
+                    f'output/evaluation/metric_based/{prompt[0:45].strip()}/initial_{prompt[0:45].strip()}_{round(max_score, 4)}.jpg')
+
+            loss.backward(retain_graph=True)
+            optimizer.step()
+
+            if (i + 1) % 150 == 0:
+                gradient_descent.condition = torch.nn.Parameter(
+                    get_shifted_embedding(
+                        gradient_descent.condition,
+                        gradient_descent.default_cond_std,
+                        gradient_descent.default_cond_mean
+                    )
+                )
+                gradient_descent.uncondition = torch.nn.Parameter(
+                    get_shifted_embedding(
+                        gradient_descent.uncondition,
+                        gradient_descent.default_uncond_std,
+                        gradient_descent.default_uncond_mean
+                    )
+                )
+                gradient_descent.condition.requires_grad = True
+                gradient_descent.uncondition.requires_grad = True
+                optimizer = gradient_descent.get_optimizer(eta, 'AdamOnLion')
+
+        with open(f'./output/evaluation/metric_based/{prompt[0:45].strip()}/{round(max_score, 4)}_output.txt', 'w') as file:
+            for item in score_list:
+                file.write(str(item) + '\n')
+
+
+        gradient_descent.latents = max_latents
         pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
-        pil_image.save(f'output/{i}_{prompt[0:45]}_{round(score.item(), 4)}.jpg')
-        loss = -score
-        loss.backward()
-        optimizer.step()
-        cnt += 1
+        pil_image.save(f'output/evaluation/metric_based/{prompt[0:45].strip()}/{prompt[0:45].strip()}_{round(max_score, 4)}.jpg')
 
 
-
-    """embedding1 =  ldm.get_embedding([prompt])[0]
-    pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
-    pil_image.save(f'output/50_{prompt[0:45]}_{score.item()}.jpg')
-
-    pil_image = ldm.embedding_2_img('', embedding1, dim=dim, seed=seed, return_pil=True, steps=70, save_img=False)
-    pil_image.save(f'output/0_{prompt[0:45]}_{score.item()}.jpg')
-
-    embedding2 = gradient_descent.text_embedding"""
 
     print((time() - start)/60.0)
 
-   #for i in range(49):
-   #    alpha = (i+1) * 0.02
-   #    print(alpha)
-
-   #    combined_embedding = ldm.combine_embeddings(embedding1, embedding2, alpha)
-   #    pil_image = ldm.embedding_2_img('', combined_embedding, dim=dim, seed=seed, return_pil=True, steps=70, save_img=False)
-   #    pil_image.save(f'output/{i + 1}_{prompt}.jpg')
