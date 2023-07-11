@@ -175,9 +175,6 @@ if __name__ == '__main__':
                     optimizer_condition = gd_condition.get_optimizer(lr_cond, 'AdamOnLion')
                     optimizer_init_latents = gd_init_latents.get_optimizer(lr_latents, 'AdamOnLion')
 
-                    max_cond = None
-                    max_score = -100000
-                    if score_metric == 'Euclidean Distance': max_score = 100000
 
                     init_latents_dist_list = list()
                     scores_list = list()
@@ -197,20 +194,12 @@ if __name__ == '__main__':
                             print(f'score: {score.item()}, max_score: {max_score}')
                             if score_metric == 'Euclidean Distance':
                                 loss = score
-                                if score.item() < max_score:
-                                    max_score = score.item()
-                                    max_cond = torch.clone(gd_condition.condition)
                             elif score_metric == 'Cosine Similarity':
                                 loss = -score
-                                if score.item() > max_score:
-                                    max_score = score.item()
-                                    max_cond = torch.clone(gd_condition.condition)
                             loss.backward(retain_graph=True)
                             optimizer_condition.step()
                             interpolation_value.append(gd_condition.alpha.item())
                         else:
-                            gd_condition.condition = max_cond
-                            gd_init_latents.condition = torch.clone(gd_condition.condition)
                             optimizer_init_latents.zero_grad()
                             score = gd_init_latents.forward(int((i - mod + 1) / 2), region, score_metric)
                             print("i - cnt - 1")
@@ -255,10 +244,6 @@ if __name__ == '__main__':
                             # optimizer_init_latents.params = gd_init_latents.parameters()
 
                             print(f'max_score: {max_score}')
-
-                            max_cond = None
-                            max_score = -100000
-                            if score_metric == 'Euclidean Distance': max_score = 100000
 
                     print(scores_list)
                     print(init_latents_dist_list)
