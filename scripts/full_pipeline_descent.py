@@ -19,8 +19,7 @@ aesthetic_predictor = AestheticPredictor(device=device)
 prompt1 = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
          'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 
-prompt1 = "bride and groom, high symmetry, intimacy, realism, intricate abstract, elegant, looking down a cliff, long " \
-          "perspective, neutral colors, dark lighting, by artstation, by greg rutkowski "
+
 
 #prompt1 = 'a painting of dubrovnik in the style of josip skerlj'
 
@@ -54,10 +53,12 @@ def create_next_directory(directory):
 
     return new_directory_name
 
-with open('./scripts/prompts1.txt', 'r', encoding='utf-8') as file:
+with open('./scripts/prompts2.txt', 'r', encoding='utf-8') as file:
     prompts = file.readlines()
     prompts = [line.strip() for line in prompts]  # Remove leading/trailing whitespace and newlines
-prompts = [prompt1]
+#prompts = [
+#    "a lizard fighting a turkey"
+#]
 
 
 def compute_blurriness(image):
@@ -65,7 +66,8 @@ def compute_blurriness(image):
     gray_image = 0.2989 * image[:, 0, :, :] + 0.5870 * image[:, 1, :, :] + 0.1140 * image[:, 2, :, :]
 
     # Compute the Laplacian filter
-    laplacian_filter = torch.tensor([[0, 1, 0], [1, -4, 1], [0, 1, 0]])
+    #laplacian_filter = torch.tensor([[0, 1, 0], [1, -4, 1], [0, 1, 0]])
+    laplacian_filter = torch.tensor([[1, 1, 1], [1, -8, 1], [1, 1, 1]])
     laplacian_filter = laplacian_filter.to(gray_image.device).to(gray_image.dtype)
 
     # Apply the Laplacian filter to the grayscale image
@@ -74,7 +76,7 @@ def compute_blurriness(image):
     # Compute the variance of the Laplacian filter response
     variance = torch.var(filtered_image)
 
-    return variance * 100
+    return variance * 10
 
 
 def compute_metric(image):
@@ -151,10 +153,9 @@ class GradientDescent(torch.nn.Module):
         self.latents = latents
         image = ldm.latents_to_image(latents, return_pil=False)
 
-        image = preprocess(image)
-        image_embedding = aesthetic_predictor.clip.encode_image(image).float()
-        image_embedding = aesthetic_predictor.get_features(image_embedding, image_input=False)
-        score = aesthetic_predictor.mlp(image_embedding).squeeze()
+        score = compute_blurriness(image)
+
+        print(score)
 
         return score
 
@@ -186,13 +187,14 @@ if __name__ == '__main__':
     start = time()
 
     eta = 0.01
-    num_images = 500
+    num_images = 50
 
     for prompt in prompts:
+        print(prompt)
         gradient_descent = GradientDescent(ldm.text_enc([prompt]))
         optimizer = gradient_descent.get_optimizer(eta, 'AdamOnLion')
-        make_dir(f'./output/evaluation/metric_based/{prompt[0:45].strip()}')
-        image_dir = create_next_directory(f'./output/evaluation/metric_based/{prompt[0:45].strip()}')
+        make_dir(f'./output/metric_based3/{prompt[0:45].strip()}')
+        image_dir = create_next_directory(f'./output/metric_based3/{prompt[0:45].strip()}')
         score_list = list()
         max_score = 0
         max_latents = None
@@ -206,7 +208,7 @@ if __name__ == '__main__':
 
             pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
             pil_image.save(
-                f'output/evaluation/metric_based/{prompt[0:45].strip()}/{image_dir}/{i}_{prompt[0:45].strip()}_{round(score.item(), 4)}.jpg')
+                f'output/metric_based3/{prompt[0:45].strip()}/{image_dir}/{i}_{prompt[0:45].strip()}_{round(score.item(), 4)}.jpg')
             if score.item() > max_score:
                 max_score = score.item()
                 max_latents = torch.clone(gradient_descent.latents)
@@ -215,7 +217,7 @@ if __name__ == '__main__':
             if i == 0:
                 pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
                 pil_image.save(
-                    f'output/evaluation/metric_based/{prompt[0:45].strip()}/initial_{prompt[0:45].strip()}_{round(max_score, 4)}.jpg')
+                    f'output/metric_based3/{prompt[0:45].strip()}/initial_{prompt[0:45].strip()}_{round(max_score, 4)}.jpg')
 
             loss.backward(retain_graph=True)
             optimizer.step()
@@ -239,14 +241,14 @@ if __name__ == '__main__':
                 gradient_descent.uncondition.requires_grad = True
                 optimizer = gradient_descent.get_optimizer(eta, 'AdamOnLion')
 
-        with open(f'./output/evaluation/metric_based/{prompt[0:45].strip()}/{round(max_score, 4)}_output.txt', 'w') as file:
+        with open(f'./output/metric_based3/{prompt[0:45].strip()}/{round(max_score, 4)}_output.txt', 'w') as file:
             for item in score_list:
                 file.write(str(item) + '\n')
 
 
         gradient_descent.latents = max_latents
         pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
-        pil_image.save(f'output/evaluation/metric_based/{prompt[0:45].strip()}/{prompt[0:45].strip()}_{round(max_score, 4)}.jpg')
+        pil_image.save(f'output/metric_based3/{prompt[0:45].strip()}/{prompt[0:45].strip()}_{round(max_score, 4)}.jpg')
 
 
 
