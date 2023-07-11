@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 from utils.file_utils import make_dir
+import numpy as np
 
 
 def plot_histogram(data, path, prompt):
@@ -26,15 +27,39 @@ def create_boxplot(values, prompt_aesthetics=None, filename=None):
     return fig
 
 
-def plot_aesthetic_scores(scores, save_dir):
+def create_boxplots(data, labels):
+    # Create a new figure
+    plt.figure(figsize=(10, 6))
+
+    # Create the boxplot
+    plt.boxplot(data, labels=labels, patch_artist=True)
+
+    # Add a title and labels
+    plt.title('Boxplots for Different Indices')
+    plt.xlabel('Index')
+    plt.ylabel('Values')
+
+    # Show the plot
+    plt.savefig('boxplot.png')
+
+
+
+
+def plot_scores(scores, save_dir, y_label='Scores', window_size=5, num_dots=5):
     """
-    Create a line plot of aesthetic scores and save the image to the specified directory.
+    Create a line plot of scores and save the image to the specified directory.
 
     Parameters:
-    scores (list): A list of aesthetic scores to plot.
+    scores (list): A list of scores to plot.
     save_dir (str): The directory to save the image to.
     """
-    plt.plot(scores)
-    plt.ylabel('Aesthetic Score')
-    plt.xlabel('Image')
+
+    smoothed_scores = np.convolve(scores, np.ones(window_size) / window_size, mode='valid')
+
+    plt.plot(range(window_size - 1, len(scores)), smoothed_scores)
+    plt.scatter(np.argpartition(scores, -num_dots)[-num_dots:] + window_size - 1,
+                np.partition(scores, -num_dots)[-num_dots:], color='red', zorder=10)
+    plt.ylabel(y_label)
+    plt.xlabel('Iterations')
     plt.savefig(save_dir)
+    plt.close()
