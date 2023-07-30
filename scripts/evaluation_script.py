@@ -115,7 +115,6 @@ def get_best_image(directory_path):
 
 
 def plot_images(directory_path, window_size=15):
-    cnt = 0
     line_cnt = 0
 
     # Create a figure
@@ -137,7 +136,6 @@ def plot_images(directory_path, window_size=15):
 
                         # Plot on the respective subplot
                         axs[line_cnt % 5].plot(range(window_size - 1, len(lines)), smoothed_scores)
-
                         line_cnt += 1
 
                         # If 3 lines have been plotted on the same subplot, switch to the next one
