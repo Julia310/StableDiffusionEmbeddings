@@ -114,8 +114,12 @@ def get_best_image(directory_path):
                                 shutil.copy(image_path, new_image_path)
 
 
-def plot_images(directory_path):
+def plot_images(directory_path, window_size=15):
     cnt = 0
+    line_cnt = 0
+
+    # Create a figure
+    fig, axs = plt.subplots(5, 1, figsize=(10, 20), sharex=True)
 
     # Iterate through each subdirectory
     for dir_name in os.listdir(directory_path):
@@ -126,24 +130,41 @@ def plot_images(directory_path):
                 if file_name.endswith("_output.txt"):
                     file_path = os.path.join(subdir_path, file_name)
                     with open(file_path, 'r') as f:
-                        cnt += 1
                         lines = f.readlines()
                         lines = [line.strip() for line in lines]  # Remove leading/trailing whitespace and newlines
-                        #lines = list(set(lines))
                         lines = [float(num) for num in lines]
-                        plt.plot(lines)
-                        if cnt % 5 == 0:
-                            plt.ylabel('Score')
-                            plt.xlabel('Iterations')
-                            plt.savefig(f'./output/{int(cnt/5)}_plot.png')
-                            plt.clf()
+                        smoothed_scores = np.convolve(lines, np.ones(window_size) / window_size, mode='valid')
+
+                        # Plot on the respective subplot
+                        axs[line_cnt % 5].plot(range(window_size - 1, len(lines)), smoothed_scores)
+
+                        line_cnt += 1
+
+                        # If 3 lines have been plotted on the same subplot, switch to the next one
+                        if line_cnt % 3 == 0:
+                            axs[(line_cnt // 3) % 5].set_ylabel('Score')
+                            axs[(line_cnt // 3) % 5].set_xlabel('Iterations')
+
+                        # If 15 lines (3 lines on 5 subplots) have been plotted, save and clear the figure
+                        if line_cnt % 15 == 0 and line_cnt != 0:
+                            fig.savefig(f'./output/{int(line_cnt/15)}_plot.png')
+                            plt.close(fig)  # close the figure
+
+                            # Recreate the figure for the next 5 subplots
+                            fig, axs = plt.subplots(5, 1, figsize=(10, 20), sharex=True)
+
+    # If the function ends and there are still unprinted subplots, save them
+    if line_cnt % 15 != 0:
+        fig.savefig(f'./output/{int(line_cnt/15)+1}_plot.png')
+        plt.close(fig)
+
 
 
 
 
 if __name__ == '__main__':
-    #directory_path = r"./output/evaluation2/aesthetic_pred/images"
-    directory_path = r"./output/evaluation2/sharpness/images"
+    directory_path = r"./output/evaluation2/aesthetic_pred/images"
+    #directory_path = r"./output/evaluation2/sharpness/images"
 
     #index_0_list, index_99_list, index_199_list, index_299_list, index_499_list = extract_indexed_elements(directory_path)
     #index_0_list, index_24_list, index_49_list = extract_indexed_elements(directory_path)
