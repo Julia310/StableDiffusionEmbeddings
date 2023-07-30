@@ -27,7 +27,7 @@ def create_boxplot(values, prompt_aesthetics=None, filename=None):
     return fig
 
 
-def create_boxplots(data, labels):
+def create_boxplots(data, labels, x_label='Index', y_label='Values'):
     # Create a new figure
     plt.figure(figsize=(10, 6))
 
@@ -36,8 +36,8 @@ def create_boxplots(data, labels):
 
     # Add a title and labels
     plt.title('Boxplots for Different Indices')
-    plt.xlabel('Index')
-    plt.ylabel('Values')
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
 
     # Show the plot
     plt.savefig('boxplot.png')
