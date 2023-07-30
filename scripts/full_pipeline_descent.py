@@ -53,12 +53,10 @@ def create_next_directory(directory):
 
     return new_directory_name
 
-with open('./scripts/prompts2.txt', 'r', encoding='utf-8') as file:
+with open('./scripts/prompts.txt', 'r', encoding='utf-8') as file:
     prompts = file.readlines()
     prompts = [line.strip() for line in prompts]  # Remove leading/trailing whitespace and newlines
-#prompts = [
-#    "a lizard fighting a turkey"
-#]
+
 
 
 def compute_blurriness(image):
@@ -193,10 +191,10 @@ if __name__ == '__main__':
         print(prompt)
         gradient_descent = GradientDescent(ldm.text_enc([prompt]))
         optimizer = gradient_descent.get_optimizer(eta, 'AdamOnLion')
-        make_dir(f'./output/metric_based3/{prompt[0:45].strip()}')
-        image_dir = create_next_directory(f'./output/metric_based3/{prompt[0:45].strip()}')
+        make_dir(f'./output/metric_based2/{prompt[0:45].strip()}')
+        image_dir = create_next_directory(f'./output/metric_based2/{prompt[0:45].strip()}')
         score_list = list()
-        max_score = 0
+        max_score = 100000
         max_latents = None
 
         for i in range(num_images):
@@ -208,16 +206,16 @@ if __name__ == '__main__':
 
             pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
             pil_image.save(
-                f'output/metric_based3/{prompt[0:45].strip()}/{image_dir}/{i}_{prompt[0:45].strip()}_{round(score.item(), 4)}.jpg')
-            if score.item() > max_score:
+                f'output/metric_based2/{prompt[0:45].strip()}/{image_dir}/{i}_{prompt[0:45].strip()}_{round(score.item(), 4)}.jpg')
+            if score.item() < max_score:
                 max_score = score.item()
                 max_latents = torch.clone(gradient_descent.latents)
-            loss = -score
+            loss = score
 
             if i == 0:
                 pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
                 pil_image.save(
-                    f'output/metric_based3/{prompt[0:45].strip()}/initial_{prompt[0:45].strip()}_{round(max_score, 4)}.jpg')
+                    f'output/metric_based2/{prompt[0:45].strip()}/initial_{prompt[0:45].strip()}_{round(max_score, 4)}.jpg')
 
             loss.backward(retain_graph=True)
             optimizer.step()
@@ -241,14 +239,14 @@ if __name__ == '__main__':
                 gradient_descent.uncondition.requires_grad = True
                 optimizer = gradient_descent.get_optimizer(eta, 'AdamOnLion')
 
-        with open(f'./output/metric_based3/{prompt[0:45].strip()}/{round(max_score, 4)}_output.txt', 'w') as file:
+        with open(f'./output/metric_based2/{prompt[0:45].strip()}/{round(max_score, 4)}_output.txt', 'w') as file:
             for item in score_list:
                 file.write(str(item) + '\n')
 
 
         gradient_descent.latents = max_latents
         pil_image = ldm.latents_to_image(gradient_descent.latents)[0]
-        pil_image.save(f'output/metric_based3/{prompt[0:45].strip()}/{prompt[0:45].strip()}_{round(max_score, 4)}.jpg')
+        pil_image.save(f'output/metric_based2/{prompt[0:45].strip()}/{prompt[0:45].strip()}_{round(max_score, 4)}.jpg')
 
 
 
