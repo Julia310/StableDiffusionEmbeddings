@@ -7,6 +7,14 @@ import os
 
 seed = 417016
 seed2 = 683395
+seeds = [
+    [417016, 683395, 370813],
+    [222261, 23916, 635868],
+    [752801, 543920, 354007],
+    [466388, 662243, 871288],
+    [935806, 329084, 466388]
+]
+
 target_seed = 510675
 #target_seed = 683395
 dim = 512
@@ -58,12 +66,11 @@ def compute_dist_metric(metric, target_latents, latents):
     return score
 
 class GradientDescent(torch.nn.Module):
-    def __init__(self, condition, target_condition, target_latents, comb_init_latents, comb_init_latents2):
+    def __init__(self, condition, target_condition, target_latents, comb_init_latents):
         super().__init__()
         self.condition_row = condition[:, 0, :]
         self.condition = condition[:, 1:, :]
         self.initial_latents = comb_init_latents
-        self.initial_latents2 = comb_init_latents2
         self.target_condition = target_condition[:, 1:, :]
         self.uncondition = ldm.text_enc([""], condition.shape[1])
         self.latents = None
@@ -78,32 +85,27 @@ class GradientDescent(torch.nn.Module):
         return torch.cat([self.uncondition, cond])
 
     def forward(self, i, region_indices, metric):
-        ldm.initial_latents = self.initial_latents
-        latents = ldm.embedding_2_img('', self.get_text_embedding(), save_img=False, dim=dim,
-                                      return_pil=False,
-                                      return_latents=True, keep_init_latents=True)
+        score = 0
+        for init_latents in self.initial_latents:
+            ldm.initial_latents = init_latents
+            latents = ldm.embedding_2_img('', self.get_text_embedding(), save_img=False, dim=dim,
+                                          return_pil=False,
+                                          return_latents=True, keep_init_latents=True)
 
-        ldm.initial_latents = self.initial_latents2
-        latents2 = ldm.embedding_2_img('', self.get_text_embedding(), save_img=False, dim=dim,
-                                      return_pil=False,
-                                      return_latents=True, keep_init_latents=True)
 
-        if region_indices == "every 4":
-            target_latents = self.target_latents[:, :, ::4, ::4]
-            latents = latents[:, :, ::4, ::4]
-            latents2 = latents2[:, :, ::4, ::4]
-        elif region_indices == "every 4 alternating":
-            target_latents = self.target_latents[:, :, i % 4::4, i % 4::4]
-            latents = latents[:, :, i % 4::4, i % 4::4]
-            latents2 = latents2[:, :, i % 4::4, i % 4::4]
-        elif region_indices == "center":
-            target_latents = self.target_latents[:, :, 30:34, 30:34]
-            latents = latents[:, :, 30:34, 30:34]
-            latents2 = latents2[:, :, 30:34, 30:34]
-        else:
-            target_latents = self.target_latents
+            if region_indices == "every 4":
+                target_latents = self.target_latents[:, :, ::4, ::4]
+                latents = latents[:, :, ::4, ::4]
+            elif region_indices == "every 4 alternating":
+                target_latents = self.target_latents[:, :, i % 4::4, i % 4::4]
+                latents = latents[:, :, i % 4::4, i % 4::4]
+            elif region_indices == "center":
+                target_latents = self.target_latents[:, :, 30:34, 30:34]
+                latents = latents[:, :, 30:34, 30:34]
+            else:
+                target_latents = self.target_latents
 
-        score = compute_dist_metric(metric, target_latents, latents) + compute_dist_metric(metric, target_latents, latents2)
+            score = compute_dist_metric(metric, target_latents, latents) + score
 
         return score
 
@@ -133,92 +135,83 @@ class GradientDescent(torch.nn.Module):
 if __name__ == '__main__':
 
     with torch.no_grad():
+        latents_list = list()
         target_latents = ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], save_img=False, dim=dim,
                                              seed=target_seed, return_pil=False,
                                              return_latents=True, keep_init_latents=False)
 
         target_init_latents = torch.clone(ldm.initial_latents)
-        ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], dim=dim, seed=seed, return_latents=True,
-                            keep_init_latents=False)
-        latents = torch.clone(ldm.initial_latents)
-        ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], dim=dim, seed=seed2, return_latents=True,
-                            keep_init_latents=False)
-        latents2 = torch.clone(ldm.initial_latents)
 
-        eta = 100
+        for i in range(len(seeds)):
+            ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], dim=dim, seed=seeds[i], return_latents=True,
+                                keep_init_latents=False)
+            latents_list.append(torch.clone(ldm.initial_latents))
 
+
+    for eta in [0.01, 0.1, 1., 10., 100.]:
         os.mkdir(f'./output/interpolation/{eta}')
 
-
-    for score_metric in ['Cosine Similarity', 'Euclidean Distance']:
-        for region in ['complete', 'every 4', 'every 4 alternating', 'center']:
-            for mod in [2, 10]:
-                val = 0.01
-
-
-                dir_num = create_next_directory(f'output/interpolation/{eta}')
-
-                print('========================================')
-                print(f' {dir_num}.')
-                print(f'region: {region}')
-                print(score_metric)
-                print(f'embedding update for {mod - 1} iterations')
+        for score_metric in ['Cosine Similarity', 'Euclidean Distance']:
+            for region in ['complete', 'every 4', 'every 4 alternating', 'center']:
+                for mod in [2, 10]:
+                    val = 0.01
 
 
-                gd = GradientDescent(
-                    ldm.text_enc([prompt]),
-                    ldm.text_enc([prompt2]),
-                    target_latents,
-                    ldm.slerp(target_init_latents, latents, val),
-                    ldm.slerp(target_init_latents, latents2, val)
-                )
+                    dir_num = create_next_directory(f'output/interpolation/{eta}')
 
-                optimizer = gd.get_optimizer(eta, 'AdamOnLion')
-
-                interpolation_value = [-5.]
-                cnt = 0
-
-                for i in range(mod * 100):
-                    cnt += 1
-                    cnt = cnt % mod
-                    if (i + 1) % mod != 0:  # i >= 0:
-                        optimizer.zero_grad()
-                        score = gd.forward(int((i - cnt + 1) / 2), region, score_metric)
-                        print(int((i - cnt + 1) / 2))
-                        if score_metric == 'Euclidean Distance':
-                            loss = score
-                        elif score_metric == 'Cosine Similarity':
-                            loss = -score
-                        loss.backward(retain_graph=True)
-                        optimizer.step()
-                        interpolation_value.append(gd.alpha.item())
-                    else:
-                        val = val + 0.0099
-                        print('update initial latents')
-                        print(val)
-                        gd.initial_latents = ldm.slerp(target_init_latents, latents, val)
-                        gd.initial_latents2 = ldm.slerp(target_init_latents, latents2, val)
-
-                        pil_img = ldm.embedding_2_img('', gd.get_text_embedding(), save_img=False,
-                                                                                    dim=dim, return_pil=True,
-                                                                                    return_latents=False,
-                                                      keep_init_latents=False,
-                                                      seed=seed)
-                        pil_img2 = ldm.embedding_2_img('', gd.get_text_embedding(), save_img=False,
-                                                      dim=dim, return_pil=True,
-                                                      return_latents=False,
-                                                      keep_init_latents=False,
-                                                      seed=seed2)
-                        #pil_img = ldm.embedding_2_img('', ldm.get_embedding([prompt])[0],
-                        #                              save_img=False,
-                        #                              dim=dim, return_pil=True,
-                        #                              return_latents=False,
-                        #                              keep_init_latents=True)
-                        pil_img.save(f'output/interpolation/{eta}/{dir_num}/A_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
-                        pil_img2.save(f'output/interpolation/{eta}/{dir_num}/B_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
+                    print('========================================')
+                    print(f' {dir_num}.')
+                    print(f'region: {region}')
+                    print(score_metric)
+                    print(f'embedding update for {mod - 1} iterations')
 
 
-                plot_scores(interpolation_value, f'output/interpolation/{eta}/{dir_num}/interpolation_values.jpg',
-                            x_label='Iterations',
-                            y_label='alpha')
-                plt.clf()
+
+
+                    gd = GradientDescent(
+                        ldm.text_enc([prompt]),
+                        ldm.text_enc([prompt2]),
+                        target_latents,
+                        [ldm.slerp(target_init_latents, latent, val) for latent in latents_list]
+                    )
+
+                    optimizer = gd.get_optimizer(eta, 'AdamOnLion')
+
+                    interpolation_value = [-5.]
+                    cnt = 0
+
+                    for i in range(mod * 100):
+                        cnt += 1
+                        cnt = cnt % mod
+                        if (i + 1) % mod != 0:  # i >= 0:
+
+                            seed_batch = seeds[i % len(seeds)]
+                            optimizer.zero_grad()
+                            score = gd.forward(int((i - cnt + 1) / 2), region, score_metric, seed_batch)
+                            print(int((i - cnt + 1) / 2))
+                            if score_metric == 'Euclidean Distance':
+                                loss = score
+                            elif score_metric == 'Cosine Similarity':
+                                loss = -score
+                            loss.backward(retain_graph=True)
+                            optimizer.step()
+                            interpolation_value.append(gd.alpha.item())
+                        else:
+                            val = val + 0.0099
+                            print('update initial latents')
+                            print(val)
+                            gd.initial_latents = [ldm.slerp(target_init_latents, latent, val) for latent in latents_list]
+
+                            pil_img = ldm.embedding_2_img('', gd.get_text_embedding(), save_img=False,
+                                                                                        dim=dim, return_pil=True,
+                                                                                        return_latents=False,
+                                                          keep_init_latents=False,
+                                                          seed=seed)
+
+                            pil_img.save(f'output/interpolation/{eta}/{dir_num}/A_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
+
+
+                    plot_scores(interpolation_value, f'output/interpolation/{eta}/{dir_num}/interpolation_values.jpg',
+                                x_label='Iterations',
+                                y_label='alpha')
+                    plt.clf()
