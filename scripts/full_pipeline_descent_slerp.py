@@ -243,7 +243,6 @@ if __name__ == '__main__':
                             optimizer_init_latents = gd_init_latents.get_optimizer(lr_latents, 'AdamOnLion')
                             # optimizer_init_latents.params = gd_init_latents.parameters()
 
-                            print(f'max_score: {max_score}')
 
                     print(scores_list)
                     print(init_latents_dist_list)
