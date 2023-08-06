@@ -30,6 +30,17 @@ condition_list = [None] * 5
 
 no_of_selections = 0
 img_dir = None
+interpolation_method = 'slerp'
+
+
+def get_interpolated_conditions(cond1, cond2, interpolation_val, method='slerp'):
+    if method == 'lerp':
+        #current_condition = ldm.lerp(current_condition, target_condition, selection_effect)
+        return ldm.lerp(cond1, cond2, interpolation_val)
+    else:
+        cond_row = cond1[:, 0, :]
+        interpolated_cond = ldm.slerp(cond1[:, 1:, :], cond2[:, 1:, :], interpolation_val)
+        return torch.cat((cond_row.unsqueeze(dim=1), interpolated_cond), dim=1)
 
 
 def set_img_directory(prompt):
@@ -160,8 +171,12 @@ def update_user_prompt(choice, selection_effect):
 
     idx = int(choice.split('Img')[1]) - 1
     target_condition = torch.clone(condition_list[idx])
-
-    current_condition = ldm.lerp(current_condition, target_condition, selection_effect)
+    current_condition = get_interpolated_conditions(
+        current_condition,
+        target_condition,
+        selection_effect,
+        method=interpolation_method
+    )
 
     return image_list[idx].copy()
 
@@ -293,13 +308,13 @@ def get_images_for_selection():
 
         val = (1-const)/(1 - compute_dot(cond_A, cond_B))
 
-        cond = ldm.lerp(cond_A, cond_B, val)
+        cond = get_interpolated_conditions(cond_A, cond_B, val, method=interpolation_method)
 
         cond_A = cond
         cond_B = ldm.text_enc([global_prompt + prompt_list[i]])
         val = (1 - const) / (1 - compute_dot(cond_A, cond_B))
         print(val)
-        condition_list[i] = ldm.lerp(cond_A, cond_B, val)
+        condition_list[i] = get_interpolated_conditions(cond_A, cond_B, val, method=interpolation_method)
         image_list[i] = ldm.embedding_2_img('', torch.cat([uncondition, condition_list[i]]), return_pil=True, save_img=False)
 
 
