@@ -81,8 +81,7 @@ def update_history():
     prompt_list[0] = current_prompt
     print(image_list)
     print(prompt_list)
-#0, 3d cartoon,cute fluffy fox
-#1, 3d cartoon, cute fluffy blue fox
+
 
 def update_image(prompt):
     global no_of_images, current_image, current_prompt
