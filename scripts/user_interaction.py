@@ -35,7 +35,6 @@ interpolation_method = 'slerp'
 
 def get_interpolated_conditions(cond1, cond2, interpolation_val, method='slerp'):
     if method == 'lerp':
-        #current_condition = ldm.lerp(current_condition, target_condition, selection_effect)
         return ldm.lerp(cond1, cond2, interpolation_val)
     else:
         cond_row = cond1[:, 0, :]
@@ -93,7 +92,7 @@ def init_pipeline_params(prompt, seed):
     )
 
     set_img_directory(prompt)
-    current_image.save(os.path.join(img_dir, 'results', f'0_{prompt}.jpg'))
+    current_image.save(os.path.join(img_dir, 'results', f'0_{prompt[0:30].strip()}.jpg'))
 
     get_images_for_selection()
 
@@ -273,8 +272,8 @@ def update_images(choice, selection_effect):
 
     get_images_for_selection()
 
-    previously_chosen.save(os.path.join(img_dir, 'selected', f'{no_of_selections - 1}_{selection_effect}_{global_prompt}.jpg'))
-    current_image.save(os.path.join(img_dir, 'results', f'{no_of_selections}_{global_prompt}.jpg'))
+    previously_chosen.save(os.path.join(img_dir, 'selected', f'{no_of_selections - 1}_{selection_effect}_{global_prompt[0:30].strip()}.jpg'))
+    current_image.save(os.path.join(img_dir, 'results', f'{no_of_selections}_{global_prompt[0:30].strip()}.jpg'))
 
 
     add_to_history(previously_chosen, previous_image, current_image, selection_effect)
