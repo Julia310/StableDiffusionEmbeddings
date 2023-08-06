@@ -9,6 +9,7 @@ from sklearn.manifold import TSNE
 from umap import UMAP
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 ldm = StableDiffusion(device='cuda')
 uncondition = None
@@ -28,6 +29,35 @@ interpolation_val = [[None, None, None]] * 5
 condition_list = [None] * 5
 
 no_of_selections = 0
+img_dir = None
+
+
+def set_img_directory(prompt):
+    global img_dir
+    base_path = "./output/user_interaction/"
+
+    if not os.path.isdir(base_path):
+        os.makedirs(base_path)
+
+    prompt = prompt.strip()  # Trim the prompt
+    dirs = os.listdir(base_path)
+
+    # Find the existing directories with the same prompt and get the maximum number used
+    max_number = 0
+    for directory in dirs:
+        if directory.endswith(prompt):
+            number = int(directory.split('_')[0])
+            if number > max_number:
+                max_number = number
+
+    new_dir_name = f"{max_number + 1}_{prompt}"
+
+    # Create the directory
+    img_dir = os.path.join(base_path, new_dir_name)
+    os.makedirs(img_dir)
+    os.mkdir(os.path.join(img_dir, 'selected'))
+    os.mkdir(os.path.join(img_dir, 'results'))
+
 
 def init_pipeline_params(prompt, seed):
     global uncondition, current_gd_image, current_condition, condition_list
@@ -50,6 +80,9 @@ def init_pipeline_params(prompt, seed):
         save_img=False,
         keep_init_latents=False
     )
+
+    set_img_directory(prompt)
+    current_image.save(os.path.join(img_dir, 'results', f'0_{prompt}.jpg'))
 
     get_images_for_selection()
 
@@ -225,6 +258,10 @@ def update_images(choice, selection_effect):
 
     get_images_for_selection()
 
+    previously_chosen.save(os.path.join(img_dir, 'selected', f'{no_of_selections - 1}_{selection_effect}_{global_prompt}.jpg'))
+    current_image.save(os.path.join(img_dir, 'results', f'{no_of_selections}_{global_prompt}.jpg'))
+
+
     add_to_history(previously_chosen, previous_image, current_image, selection_effect)
     return image_list[0], image_list[1], image_list[2], image_list[3], image_list[4], current_image, \
         no_selections_list[0], image_history[0][0], image_history[0][1], image_history[0][2], \
@@ -271,7 +308,7 @@ def get_images_for_selection():
 with gr.Blocks() as demo:
     with gr.Tab("1. Initialization"):
         with gr.Row():
-            seed = gr.Number(label="Seed")
+            seed = gr.Number(label="Seed", value=1337, visible=False)
             prompt = gr.Textbox(label="Prompt")
         with gr.Row():
             btn_init = gr.Button("Initialize")
