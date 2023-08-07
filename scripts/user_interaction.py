@@ -322,7 +322,7 @@ def get_images_for_selection():
 with gr.Blocks() as demo:
     with gr.Tab("1. Initialization"):
         with gr.Row():
-            seed = gr.Number(label="Seed", value=1337, visible=False)
+            seed = gr.Number(label="Seed", value=1332, visible=False)
             prompt = gr.Textbox(label="Prompt")
         with gr.Row():
             btn_init = gr.Button("Initialize")
