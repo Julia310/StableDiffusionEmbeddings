@@ -1,11 +1,9 @@
-from transformers import CLIPTextModel, CLIPTokenizer#, CLIPImageProcessor, CLIPVisionModel
+from transformers import CLIPTextModel, CLIPTokenizer
 import torch
-from diffusers import UNet2DConditionModel, LMSDiscreteScheduler, AutoencoderKL, EulerDiscreteScheduler
+from diffusers import UNet2DConditionModel, LMSDiscreteScheduler, AutoencoderKL
 from tqdm import tqdm
-import os
 from PIL import Image
 from torchvision import transforms as tfms
-from utils.image_generation import sample_noise
 
 
 class StableDiffusion:
@@ -24,8 +22,6 @@ class StableDiffusion:
         self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=self.dtype)
         self.text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14",
                                                           torch_dtype=self.dtype).to(self.device)
-        #self.image_processor = CLIPImageProcessor.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=self.dtype)
-        #self.image_encoder = CLIPVisionModel.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=self.dtype).to(self.device)
         self.initial_latents = None
 
     def text_enc(self, prompts, maxlen=None):
@@ -81,18 +77,6 @@ class StableDiffusion:
             embedding_list.append(emb)
 
         return embedding_list
-
-    def random_embedding(self, shape, std, mean, num):
-        embedding_list = list()
-        for i in range(num):
-            text_encoded = sample_noise(std, mean, shape)
-
-            uncond = self.text_enc([""], shape)
-            emb = torch.cat([uncond, text_encoded])
-            embedding_list.append(emb)
-
-        return embedding_list
-
 
     def get_cov(self, X, Y):
         mean_X = torch.mean(X)
