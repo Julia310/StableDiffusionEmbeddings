@@ -40,7 +40,6 @@ def set_img_directory(prompt):
     os.makedirs(img_dir)
 
 
-
 def generate_image(curr_prompt):
     current_image = ldm.embedding_2_img(
         '',
@@ -102,7 +101,7 @@ def update_image(prompt):
     prompts_json[no_of_images] = prompt
 
     with open(os.path.join(img_dir, 'prompts.json'), 'w') as file:
-        json.dump(prompts_json, file)
+        json.dump(prompts_json, file, indent=4)
 
     return current_image, \
         no_images_list[0], image_list[0], prompt_list[0], \
@@ -112,13 +111,13 @@ def update_image(prompt):
         no_images_list[4], image_list[4], prompt_list[4]
 
 
-
 css = '''
 #image_upload{min-height:400px}
 #image_upload [data-testid="image"], #img_id [data-testid="image"] > div{min-height: 400px}
 '''
 
 with gr.Blocks(css=css) as demo:
+
     with gr.Tab("1. Initialization"):
         with gr.Row():
             seed = gr.Number(label="Seed", value=1332, visible=False)
