@@ -1,0 +1,10 @@
+transformers
+diffusers
+accelerate
+numpy
+matplotlib
+gradio
+tqdm
+Pillow
+scikit-learn
+umap-learn
