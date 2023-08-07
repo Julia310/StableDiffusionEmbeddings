@@ -32,9 +32,6 @@ prompt = 'Single Color Ball'
 
 prompt2 = 'Black Single Color Ball'
 
-#interpolation only a single batch at a time
-#interpolation1 all batches
-
 
 def create_next_directory(directory):
     numerical_directories = []
