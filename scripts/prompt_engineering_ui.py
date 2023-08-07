@@ -1,7 +1,7 @@
 import gradio as gr
 import os
-import torch
 from ldm.stable_diffusion import StableDiffusion
+import json
 
 
 ldm = StableDiffusion(device='cuda')
@@ -50,7 +50,7 @@ def generate_image(curr_prompt):
         save_img=False,
         keep_init_latents=False
     )
-    current_image.save(os.path.join(img_dir, f'{no_of_images}_{curr_prompt[0:30].strip()}.jpg'))
+    current_image.save(os.path.join(img_dir, f'{no_of_images}.jpg'))
     return current_image
 
 
@@ -65,8 +65,9 @@ def init_pipeline_params(init_prompt, seed):
     current_image = generate_image(init_prompt)
 
     text = 'Initialization completed. Switch to Image Generation Tab.'
-    with open(os.path.join(img_dir, 'prompts.txt'), 'w') as file:
-        file.write('0, ' + init_prompt + '\n')
+
+    with open(os.path.join(img_dir, 'prompts.json'), 'w') as file:
+        json.dump({0: init_prompt}, file)
 
     return current_image, init_prompt, text
 
@@ -95,8 +96,13 @@ def update_image(prompt):
     current_image = generate_image(prompt)
     current_prompt = prompt
 
-    with open(os.path.join(img_dir, 'prompts.txt'), 'a') as file:
-        file.write(str(no_of_images) + ', ' + prompt + '\n')
+    with open(os.path.join(img_dir, 'prompts.json'), 'r') as file:
+        prompts_json = json.load(file)
+
+    prompts_json[no_of_images] = prompt
+
+    with open(os.path.join(img_dir, 'prompts.json'), 'w') as file:
+        json.dump(prompts_json, file)
 
     return current_image, \
         no_images_list[0], image_list[0], prompt_list[0], \
@@ -115,7 +121,7 @@ css = '''
 with gr.Blocks(css=css) as demo:
     with gr.Tab("1. Initialization"):
         with gr.Row():
-            seed = gr.Number(label="Seed", value=1337, visible=False)
+            seed = gr.Number(label="Seed", value=1332, visible=False)
             initial_prompt = gr.Textbox(label="Prompt")
         with gr.Row():
             btn_init = gr.Button("Initialize")
@@ -198,4 +204,4 @@ with gr.Blocks(css=css) as demo:
     )
 
 
-demo.launch(server_port=5555)
+demo.launch(server_port=5555, share=True)
