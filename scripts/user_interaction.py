@@ -433,11 +433,6 @@ with gr.Blocks() as demo:
             markdown14 = gr.Markdown()
             markdown15 = gr.Markdown()
 
-
-    #with gr.Accordion("Open for More!"):
-    #    gr.Markdown("Look at me...")
-
-
     btn_init.click(
         init_pipeline_params,
         inputs=[prompt, seed],
@@ -462,4 +457,4 @@ with gr.Blocks() as demo:
                  ]
     )
 
-demo.launch()
+demo.launch(share=True)
