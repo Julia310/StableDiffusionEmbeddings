@@ -1,0 +1,6 @@
+transformers
+diffusers
+accelerate
+gradio
+tqdm
+Pillow
