@@ -12,9 +12,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the "ldm" package folder to the container
 COPY ./ldm /workspace/ldm
+
+# Copy the "utils" package folder to the container
 COPY ./utils /workspace/utils
 
-# Copy the prompt_engineering_ui.py script from the "scripts" folder to the container
+# Copy the user_interaction.py script from the "scripts" folder to the container
 COPY ./scripts/user_interaction.py /workspace
 
 # Default command to run the script
