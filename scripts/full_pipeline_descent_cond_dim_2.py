@@ -7,14 +7,6 @@ import os
 
 seed = 417016
 seed2 = 683395
-seeds = [
-    [417016, 683395, 370813],
-    [222261, 23916, 635868],
-    [752801, 543920, 354007],
-    [466388, 662243, 871288],
-    [935806, 329084, 466388]
-]
-
 
 seeds = [
     [417016, 683395],
@@ -25,6 +17,14 @@ seeds = [
     [662243, 871288],
     [935806, 329084],
     [205620, 466388]
+]
+
+seeds = [
+    [205620, 683395, 370813],
+    [222261, 23916, 635868],
+    [752801, 543920, 354007],
+    [466388, 662243, 871288],
+    [935806, 329084, 466388]
 ]
 
 target_seed = 510675
@@ -41,9 +41,11 @@ ldm = StableDiffusion(device=device)
 # prompt = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
 #         'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 
-prompt = 'Single Color Ball'
+#prompt = 'Single Color Ball'
+prompt = 'Glass cube'
+prompt = "Glass cube, sharp focus, highly detailed, 3 d, rendered, octane render"
 
-prompt2 = 'Black Single Color Ball'
+#prompt2 = 'Black Single Color Ball'
 
 #interpolation only a single batch at a time
 #interpolation1 all batches
@@ -169,25 +171,20 @@ if __name__ == '__main__':
 
 
 
-    for eta in [0.01, 0.1, 1., 10., 100.]:
-        os.mkdir(f'./output/interpolation1/{eta}')
-        for score_metric in ['Cosine Similarity', 'Euclidean Distance']:
+    for eta in [0.01, 0.1, 1]:
+        os.mkdir(f'./output/interpolation/{eta}')
+        for score_metric in ['Cosine Similarity']:
             for region in ['complete', 'every 4', 'every 4 alternating']:
-                for mod in [2, 10]:
+                for mod in [2]:
                     val = 0.01
 
-                    max_cond = None
-                    max_score = -100000
-                    if score_metric == 'Euclidean Distance': max_score = 100000
-                    dir_num = create_next_directory(f'output/interpolation1/{eta}')
+                    dir_num = create_next_directory(f'output/interpolation/{eta}')
 
                     print('========================================')
                     print(f' {dir_num}.')
                     print(f'region: {region}')
                     print(score_metric)
                     print(f'embedding update for {mod - 1} iterations')
-
-
 
 
                     gd = GradientDescent(
@@ -202,7 +199,7 @@ if __name__ == '__main__':
                     cnt = 0
                     batch_cnt = 0
 
-                    for i in range(mod * 100):
+                    for i in range(mod * 200):
                         cnt += 1
                         cnt = cnt % mod
                         if (i + 1) % mod != 0:
@@ -210,30 +207,23 @@ if __name__ == '__main__':
                             batch_cnt += 1
                             if batch_cnt == len(seeds): batch_cnt = 0
                             optimizer.zero_grad()
-
-                            for batch in seeds:
-                                score = gd.forward(int((i - cnt + 1) / 2), region, score_metric, batch)
-                            #score = gd.forward(int((i - cnt + 1) / 2), region, score_metric, seeds[batch_cnt])
+                            #for batch in seeds:
+                            #    score = gd.forward(int((i - cnt + 1) / 2), region, score_metric, batch)
+                            score = gd.forward(int((i - cnt + 1) / 2), region, score_metric, seeds[batch_cnt])
                             print(int((i - cnt + 1) / 2))
                             if score_metric == 'Euclidean Distance':
                                 loss = score
-                                if score.item() < max_score:
-                                    max_score = score.item()
-                                    max_cond = torch.clone(gd.condition)
                             elif score_metric == 'Cosine Similarity':
                                 loss = -score
-                                if score.item() > max_score:
-                                    max_score = score.item()
-                                    max_cond = torch.clone(gd.condition)
                             loss.backward(retain_graph=True)
                             optimizer.step()
                             #interpolation_value.append(gd.alpha.item())
                         else:
-                            gd.condition = torch.nn.Parameter(
-                                get_shifted_embedding(max_cond, gd.default_std, gd.default_mean))
-                            gd.condition.requires_grad = True
-                            optimizer_condition = gd.get_optimizer(eta, 'AdamOnLion')
-                            val = val + 0.0099
+                            #gd.condition = torch.nn.Parameter(
+                            #    get_shifted_embedding(max_cond, gd.default_std, gd.default_mean))
+                            #gd.condition.requires_grad = True
+                            #optimizer_condition = gd.get_optimizer(eta, 'AdamOnLion')
+                            val = val + 0.00495
                             print('update initial latents')
                             print(val)
                             gd.val = val
@@ -244,12 +234,10 @@ if __name__ == '__main__':
                                                           keep_init_latents=False,
                                                           seed=seed)
 
-                            pil_img.save(f'output/interpolation1/{eta}/{dir_num}/A_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
+                            pil_img.save(f'output/interpolation/{eta}/{dir_num}/A_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
                             del pil_img
 
-                            max_cond = None
-                            max_score = -100000
-                            if score_metric == 'Euclidean Distance': max_score = 100000
+
 
                     #plot_scores(interpolation_value, f'output/interpolation/{eta}/{dir_num}/interpolation_values.jpg',
                     #            x_label='Iterations',
