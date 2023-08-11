@@ -4,7 +4,7 @@ from ldm.stable_diffusion import StableDiffusion
 from utils.image_generation import create_random_prompts, create_prompts
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from sklearn.preprocessing import StandardScaler
-from PIL import Image, ImageDraw
+from PIL import Image
 from sklearn.manifold import TSNE
 from umap import UMAP
 import matplotlib.pyplot as plt
@@ -30,10 +30,9 @@ condition_list = [None] * 5
 
 no_of_selections = 0
 img_dir = None
-interpolation_method = 'slerp'
 
 
-def get_interpolated_conditions(cond1, cond2, interpolation_val, method='slerp'):
+def get_interpolated_conditions(cond1, cond2, interpolation_val, method='lerp'):
     if method == 'lerp':
         return ldm.lerp(cond1, cond2, interpolation_val)
     else:
@@ -127,7 +126,6 @@ def get_random_conditions():
 
         for i in range(N):
             temp_condition_list.append(ldm.text_enc([prompt_list1[i] + prompt_list2[i]]))
-            #print(prompt_list1[i] + prompt_list2[i])
         for i in range(N):
             for j in range(i, N):
                 d[i, j] = d[j, i] = 1 - compute_dot(temp_condition_list[i], temp_condition_list[j])
@@ -173,8 +171,7 @@ def update_user_prompt(choice, selection_effect):
     current_condition = get_interpolated_conditions(
         current_condition,
         target_condition,
-        selection_effect,
-        method=interpolation_method
+        selection_effect
     )
 
     return image_list[idx].copy()
@@ -301,19 +298,19 @@ def get_images_for_selection():
 
     for i in range(5):
         # a*((1-faktor)*a+faktor*b) = const
-        const = 0.75
+        const = 0.72
         cond_A = current_condition
         cond_B = temp_condition_list[i]
 
         val = (1-const)/(1 - compute_dot(cond_A, cond_B))
 
-        cond = get_interpolated_conditions(cond_A, cond_B, val, method=interpolation_method)
+        cond = get_interpolated_conditions(cond_A, cond_B, val)
 
         cond_A = cond
         cond_B = ldm.text_enc([global_prompt + prompt_list[i]])
         val = (1 - const) / (1 - compute_dot(cond_A, cond_B))
         print(val)
-        condition_list[i] = get_interpolated_conditions(cond_A, cond_B, val, method=interpolation_method)
+        condition_list[i] = get_interpolated_conditions(cond_A, cond_B, val)
         image_list[i] = ldm.embedding_2_img('', torch.cat([uncondition, condition_list[i]]), return_pil=True, save_img=False)
 
 
@@ -343,7 +340,7 @@ with gr.Blocks() as demo:
             gr_image5 = gr.Image(label="Image5", interactive=True)
         with gr.Row():
             choice = gr.Radio(["Img1", "Img2", "Img3", "Img4", "Img5"], label="Select an Image")
-            btn_select = gr.Button("Select")
+            btn_generate = gr.Button("Generate")
             selection_effect = gr.Slider(label="Interpolation Value", minimum=0.0, maximum=1.0)
         with gr.Row():
             curr_image = gr.Image(label="Current", interactive=True)
@@ -439,7 +436,7 @@ with gr.Blocks() as demo:
         outputs=[gr_image1, gr_image2, gr_image3, gr_image4, gr_image5, curr_image, text, image_tsne]
     )
 
-    btn_select.click(
+    btn_generate.click(
         update_images,
         inputs=[choice, selection_effect],
         outputs=[gr_image1, gr_image2, gr_image3, gr_image4, gr_image5, curr_image,
