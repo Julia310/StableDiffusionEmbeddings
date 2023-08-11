@@ -376,6 +376,8 @@ css = """
     transition: border-color 0.3s ease-in-out; /* Add a smooth transition effect */
 }
 
+#gen_btn{min-height:75px}
+#gen_btn [data-testid="btn"], #gen_btn [data-testid="btn"] > div{min-height: 75px}
 """
 
 
@@ -404,8 +406,10 @@ with gr.Blocks(css=css) as demo:
             storage_box = gr.Textbox(elem_id="choice_storage", visible=False)
         with gr.Row():
             choice = gr.Radio(["Img1", "Img2", "Img3", "Img4", "Img5"], label="Select an Image", visible=False)
-            selection_effect = gr.Slider(elem_id="slider", label="Interpolation Value", minimum=0.0, maximum=1.0)
-            btn_generate = gr.Button(elem_id="generate_btn", label="Generate")
+            with gr.Column():
+                selection_effect = gr.Slider(elem_id="slider", label="Interpolation Value", minimum=0.0, maximum=1.0)
+            with gr.Column():
+                btn_generate = gr.Button("Generate", elem_id="gen_btn")
         with gr.Row():
             curr_image = gr.Image(label="Current", interactive=True)
             image_tsne = gr.Image(label="TSNE", interactive=True)
