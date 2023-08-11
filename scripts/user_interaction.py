@@ -33,6 +33,9 @@ img_dir = None
 
 
 def get_interpolated_conditions(cond1, cond2, interpolation_val, method='lerp'):
+    print(interpolation_val)
+    print(type(interpolation_val))
+
     if method == 'lerp':
         return ldm.lerp(cond1, cond2, interpolation_val)
     else:
@@ -253,6 +256,23 @@ def create_dim_reduction_plot():
 def update_images(choice, selection_effect):
     global image_list, current_image, previous_image, no_of_selections
 
+    if choice == 0:
+        no_selections_list = ['# <p style="text-align: center;">' + str(no_of_selections - i) + '</p>'
+                              if no_of_selections - i > 0 else None for i in range(5)]
+
+        return image_list[0], image_list[1], image_list[2], image_list[3], image_list[4], current_image, \
+        no_selections_list[0], image_history[0][0], image_history[0][1], image_history[0][2], \
+        f'<p style="text-align: center;">{interpolation_val[0][0]}</p>', f'<p style="text-align: center;">{interpolation_val[0][1]}</p>', \
+        no_selections_list[1], image_history[1][0], image_history[1][1], image_history[1][2], \
+        f'<p style="text-align: center;">{interpolation_val[1][0]}</p>', f'<p style="text-align: center;">{interpolation_val[1][1]}</p>', \
+        no_selections_list[2], image_history[2][0], image_history[2][1], image_history[2][2], \
+        f'<p style="text-align: center;">{interpolation_val[2][0]}</p>', f'<p style="text-align: center;">{interpolation_val[2][1]}</p>', \
+        no_selections_list[3], image_history[3][0], image_history[3][1], image_history[3][2], \
+        f'<p style="text-align: center;">{interpolation_val[3][0]}</p>', f'<p style="text-align: center;">{interpolation_val[3][1]}</p>', \
+        no_selections_list[4], image_history[4][0], image_history[4][1], image_history[4][2], \
+        f'<p style="text-align: center;">{interpolation_val[4][0]}</p>', f'<p style="text-align: center;">{interpolation_val[4][1]}</p>', \
+        create_dim_reduction_plot()
+
     no_of_selections += 1
 
     previously_chosen = update_user_prompt(choice, selection_effect)
@@ -319,13 +339,51 @@ def get_images_for_selection():
         image_list[i] = ldm.embedding_2_img('', torch.cat([uncondition, condition_list[i]]), return_pil=True, save_img=False)
 
 
+css = """
+#Img1:active {
+    background-color: yellow;
+    border: 2px solid red; /* Add a border */
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Add a shadow */
+    transition: background-color 0.3s, border 0.3s, box-shadow 0.3s;
+}
+#Img2:active {
+    background-color: yellow;
+    border: 2px solid red; /* Add a border */
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Add a shadow */
+    transition: background-color 0.3s, border 0.3s, box-shadow 0.3s;
+}
+#Img3:active {
+    background-color: yellow;
+    border: 2px solid red; /* Add a border */
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Add a shadow */
+    transition: background-color 0.3s, border 0.3s, box-shadow 0.3s;
+}
+#Img4:active {
+    background-color: yellow;
+    border: 2px solid red; /* Add a border */
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Add a shadow */
+    transition: background-color 0.3s, border 0.3s, box-shadow 0.3s;
+}
+#Img5:active {
+    background-color: yellow;
+    border: 2px solid red; /* Add a border */
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Add a shadow */
+    transition: background-color 0.3s, border 0.3s, box-shadow 0.3s;
+}
+
+.highlighted {
+    border: 3px solid #ffcc00; /* Use a yellow color that's visible on both dark and bright backgrounds */
+    transition: border-color 0.3s ease-in-out; /* Add a smooth transition effect */
+}
+
+"""
 
 
-with gr.Blocks() as demo:
+with gr.Blocks(css=css) as demo:
     with gr.Tab("1. Initialization"):
         with gr.Row():
-            seed = gr.Number(label="Seed", value=1332, visible=False)
-            prompt = gr.Textbox(label="Prompt")
+            seed = gr.Number(elem_id="seed_box", label="Seed", value=1332, visible=False)
+            prompt = gr.Textbox(elem_id="prompt_box", label="Prompt")
         with gr.Row():
             btn_init = gr.Button("Initialize")
         with gr.Row():
@@ -338,15 +396,16 @@ with gr.Blocks() as demo:
 
     with gr.Tab("2. Image Selection"):
         with gr.Row():
-            gr_image1 = gr.Image(label="Image1", interactive=True)
-            gr_image2 = gr.Image(label="Image2", interactive=True)
-            gr_image3 = gr.Image(label="Image3", interactive=True)
-            gr_image4 = gr.Image(label="Image4", interactive=True)
-            gr_image5 = gr.Image(label="Image5", interactive=True)
+            gr_image1 = gr.Image(elem_id="Img1", label="Image1", interactive=True)
+            gr_image2 = gr.Image(elem_id="Img2", label="Image2", interactive=True)
+            gr_image3 = gr.Image(elem_id="Img3", label="Image3", interactive=True)
+            gr_image4 = gr.Image(elem_id="Img4", label="Image4", interactive=True)
+            gr_image5 = gr.Image(elem_id="Img5", label="Image5", interactive=True)
+            storage_box = gr.Textbox(elem_id="choice_storage", visible=False)
         with gr.Row():
-            choice = gr.Radio(["Img1", "Img2", "Img3", "Img4", "Img5"], label="Select an Image")
-            btn_generate = gr.Button("Generate")
-            selection_effect = gr.Slider(label="Interpolation Value", minimum=0.0, maximum=1.0)
+            choice = gr.Radio(["Img1", "Img2", "Img3", "Img4", "Img5"], label="Select an Image", visible=False)
+            selection_effect = gr.Slider(elem_id="slider", label="Interpolation Value", minimum=0.0, maximum=1.0)
+            btn_generate = gr.Button(elem_id="generate_btn", label="Generate")
         with gr.Row():
             curr_image = gr.Image(label="Current", interactive=True)
             image_tsne = gr.Image(label="TSNE", interactive=True)
@@ -438,7 +497,58 @@ with gr.Blocks() as demo:
     btn_init.click(
         init_pipeline_params,
         inputs=[prompt, seed],
-        outputs=[gr_image1, gr_image2, gr_image3, gr_image4, gr_image5, curr_image, text, image_tsne]
+        outputs=[gr_image1, gr_image2, gr_image3, gr_image4, gr_image5, curr_image, text, image_tsne],
+        _js=r"""
+function initListeners() {
+    const componentIds = ["Img1", "Img2", "Img3", "Img4", "Img5"];
+    const invisibleTextbox = document.getElementById("choice_storage");
+    let currentHighlighted = null;
+
+    function toggleHighlight(element) {
+        if (currentHighlighted) {
+            const innerDivs = currentHighlighted.querySelectorAll('[data-testid="image"]');
+            innerDivs.forEach(innerDiv => {
+                innerDiv.classList.remove('highlighted');
+            });
+        }
+        
+        currentHighlighted = element;
+        const innerDivs = element.querySelectorAll('[data-testid="image"]');
+        innerDivs.forEach(innerDiv => {
+            innerDiv.classList.add('highlighted');
+        }); 
+    }
+
+    componentIds.forEach(id => {
+        const component = document.getElementById(id);
+
+        component.addEventListener('click', function() {
+            if (currentHighlighted !== component) {
+                toggleHighlight(component);
+                invisibleTextbox.value = component.id;
+            }
+        });
+    });
+    
+    prompt_box = document.getElementById("prompt_box")
+    let prompt = "";
+    const prompt_texts = prompt_box.querySelectorAll('[data-testid="textbox"]');
+    prompt_texts.forEach(prompt_text => {
+        prompt = prompt_text.value;
+    });
+    
+    seed_box = document.getElementById("seed_box")
+    let seed = "";
+    const seed_values = seed_box.querySelectorAll('[type="number"]');
+    seed_values.forEach(seed_value => {
+        seed = seed_value.value;
+    });
+    
+    console.log("prompt" + prompt)
+    console.log("seed" + seed)
+    return [prompt, seed];
+}
+"""
     )
 
     btn_generate.click(
@@ -456,7 +566,33 @@ with gr.Blocks() as demo:
                  iteration5, previous_choice5, previous_image5, image5,
                  markdown14, markdown13,
                  image_tsne
-                 ]
+                 ],
+        _js="""
+function resetHighlightAndGenerate() {
+    const highlightedElement = document.querySelector('.highlighted');
+    const invisibleTextbox = document.getElementById("choice_storage");
+    selected_image = 0;
+    if (highlightedElement) {
+        highlightedElement.classList.remove('highlighted');
+        selected_image = invisibleTextbox.value;
+    } else {
+        alert("Please select an image!");        
+    }
+    invisibleTextbox.value = "";
+        
+    const slider_bar = document.getElementById("slider");
+    let slider = "";
+    const slider_values = slider_bar.querySelectorAll('[data-testid="number-input"]');
+    slider_values.forEach(slider_value => {
+        slider = slider_value.value;
+    });
+    slider = parseFloat(slider);
+    
+    console.log("slider.value" + slider);
+    console.log("selected_image" + selected_image);
+    return [selected_image, slider];
+}
+"""
     )
 
 demo.launch(share=True)
