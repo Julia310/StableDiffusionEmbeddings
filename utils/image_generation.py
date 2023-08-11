@@ -60,7 +60,7 @@ def create_random_prompts(num_prompts, numeric=False, random_prompt_len=False):
         # Generate a random input length using the randint() function
         prompt_length = 1
         if random_prompt_len:
-            prompt_length = random.randint(5, 25)
+            prompt_length = random.randint(5, 30)
         prompt = ""
         for _ in range(prompt_length):
             # Generate a random word length for the input using the randint() function
