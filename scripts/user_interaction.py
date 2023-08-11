@@ -64,8 +64,8 @@ def set_img_directory(prompt):
     # Create the directory
     img_dir = os.path.join(base_path, new_dir_name)
     os.makedirs(img_dir)
-    os.mkdir(os.path.join(img_dir, 'selected'))
-    os.mkdir(os.path.join(img_dir, 'results'))
+    os.makedirs(os.path.join(img_dir, 'selected', 'cond_binary'))
+    os.makedirs(os.path.join(img_dir, 'results', 'cond_binary'))
 
 
 def init_pipeline_params(prompt, seed):
@@ -92,6 +92,8 @@ def init_pipeline_params(prompt, seed):
 
     set_img_directory(prompt)
     current_image.save(os.path.join(img_dir, 'results', f'0_{prompt[0:30].strip()}.jpg'))
+    torch.save(current_condition, os.path.join(img_dir, 'results', 'cond_binary', f'0_tensor.pt'))
+
 
     get_images_for_selection()
 
@@ -270,7 +272,10 @@ def update_images(choice, selection_effect):
     get_images_for_selection()
 
     previously_chosen.save(os.path.join(img_dir, 'selected', f'{no_of_selections - 1}_{selection_effect}_{global_prompt[0:30].strip()}.jpg'))
+    torch.save(target_condition, os.path.join(img_dir, 'selected', 'cond_binary', f'{no_of_selections - 1}_{selection_effect}_tensor.pt'))
     current_image.save(os.path.join(img_dir, 'results', f'{no_of_selections}_{global_prompt[0:30].strip()}.jpg'))
+    torch.save(current_condition, os.path.join(img_dir, 'results', 'cond_binary', f'{no_of_selections}_tensor.pt'))
+
 
 
     add_to_history(previously_chosen, previous_image, current_image, selection_effect)
