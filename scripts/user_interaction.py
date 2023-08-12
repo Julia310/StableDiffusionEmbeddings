@@ -33,9 +33,6 @@ img_dir = None
 
 
 def get_interpolated_conditions(cond1, cond2, interpolation_val, method='lerp'):
-    print(interpolation_val)
-    print(type(interpolation_val))
-
     if method == 'lerp':
         return ldm.lerp(cond1, cond2, interpolation_val)
     else:
@@ -168,7 +165,7 @@ def get_random_conditions():
     return [temp_condition_list[i] for i in P]
 
 
-def update_user_prompt(choice, selection_effect):
+def update_user_prompt_and_get_previously_selected(choice, selection_effect):
     global current_condition
 
     idx = int(choice.split('Img')[1]) - 1
@@ -275,7 +272,7 @@ def update_images(choice, selection_effect):
 
     no_of_selections += 1
 
-    previously_chosen = update_user_prompt(choice, selection_effect)
+    previously_chosen = update_user_prompt_and_get_previously_selected(choice, selection_effect)
 
     previous_image = current_image.copy()
     current_image = ldm.embedding_2_img(
