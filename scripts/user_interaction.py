@@ -340,31 +340,7 @@ def get_images_for_selection():
 
 
 css = """
-#Img1:active {
-    background-color: yellow;
-    border: 2px solid red; /* Add a border */
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Add a shadow */
-    transition: background-color 0.3s, border 0.3s, box-shadow 0.3s;
-}
-#Img2:active {
-    background-color: yellow;
-    border: 2px solid red; /* Add a border */
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Add a shadow */
-    transition: background-color 0.3s, border 0.3s, box-shadow 0.3s;
-}
-#Img3:active {
-    background-color: yellow;
-    border: 2px solid red; /* Add a border */
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Add a shadow */
-    transition: background-color 0.3s, border 0.3s, box-shadow 0.3s;
-}
-#Img4:active {
-    background-color: yellow;
-    border: 2px solid red; /* Add a border */
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Add a shadow */
-    transition: background-color 0.3s, border 0.3s, box-shadow 0.3s;
-}
-#Img5:active {
+.selected-image:active {
     background-color: yellow;
     border: 2px solid red; /* Add a border */
     box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Add a shadow */
@@ -398,11 +374,11 @@ with gr.Blocks(css=css) as demo:
 
     with gr.Tab("2. Image Selection"):
         with gr.Row():
-            gr_image1 = gr.Image(elem_id="Img1", label="Image1", interactive=True)
-            gr_image2 = gr.Image(elem_id="Img2", label="Image2", interactive=True)
-            gr_image3 = gr.Image(elem_id="Img3", label="Image3", interactive=True)
-            gr_image4 = gr.Image(elem_id="Img4", label="Image4", interactive=True)
-            gr_image5 = gr.Image(elem_id="Img5", label="Image5", interactive=True)
+            gr_image1 = gr.Image(elem_id="Img1", elem_classes="selected-image", label="Image1", interactive=True)
+            gr_image2 = gr.Image(elem_id="Img2", elem_classes="selected-image", label="Image2", interactive=True)
+            gr_image3 = gr.Image(elem_id="Img3", elem_classes="selected-image", label="Image3", interactive=True)
+            gr_image4 = gr.Image(elem_id="Img4", elem_classes="selected-image", label="Image4", interactive=True)
+            gr_image5 = gr.Image(elem_id="Img5", elem_classes="selected-image", label="Image5", interactive=True)
             storage_box = gr.Textbox(elem_id="choice_storage", visible=False)
         with gr.Row():
             #choice = gr.Radio(["Img1", "Img2", "Img3", "Img4", "Img5"], label="Select an Image", visible=False)
