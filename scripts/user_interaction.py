@@ -405,7 +405,7 @@ with gr.Blocks(css=css) as demo:
             gr_image5 = gr.Image(elem_id="Img5", label="Image5", interactive=True)
             storage_box = gr.Textbox(elem_id="choice_storage", visible=False)
         with gr.Row():
-            choice = gr.Radio(["Img1", "Img2", "Img3", "Img4", "Img5"], label="Select an Image", visible=False)
+            #choice = gr.Radio(["Img1", "Img2", "Img3", "Img4", "Img5"], label="Select an Image", visible=False)
             with gr.Column():
                 selection_effect = gr.Slider(elem_id="slider", label="Interpolation Value", minimum=0.0, maximum=1.0)
             with gr.Column():
@@ -557,7 +557,7 @@ function initListeners() {
 
     btn_generate.click(
         update_images,
-        inputs=[choice, selection_effect],
+        inputs=[storage_box, selection_effect],
         outputs=[gr_image1, gr_image2, gr_image3, gr_image4, gr_image5, curr_image,
                  iteration1, previous_choice1, previous_image1, image_1,
                  markdown2, markdown1,
