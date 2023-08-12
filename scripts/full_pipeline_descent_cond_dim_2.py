@@ -4,6 +4,7 @@ import torch
 from utils.create_graphics import plot_scores
 import matplotlib.pyplot as plt
 import os
+import random
 
 seed = 417016
 seed2 = 683395
@@ -17,6 +18,18 @@ seeds = [
     [662243, 871288],
     [935806, 329084],
     [205620, 466388]
+]
+
+seeds = [
+    [205620, 683395, 370813],
+    [222261, 23916, 635868],
+    [752801, 543920, 354007],
+    [466388, 662243, 871288],
+    [935806, 329084, 466388],
+    [495813, 383124, 433904],
+    [887449, 872870, 221557],
+    #[135806, 729084, 666388],
+    #[335806, 229084, 116388]
 ]
 
 seeds = [
@@ -166,12 +179,15 @@ if __name__ == '__main__':
 
         target_init_latents = torch.clone(ldm.initial_latents)
 
+    seed_idx_1 = random.randint(0, 4)
+    seed_idx_2 = random.randint(0, 2)
 
+    print(f'seed : {seeds[seed_idx_1][seed_idx_2]}')
 
-    for eta in [0.01, 0.1, 1]:
+    for eta in [0.1]:
         os.mkdir(f'./output/interpolation/{eta}')
         for score_metric in ['Cosine Similarity']:
-            for region in ['complete', 'every 4', 'every 4 alternating']:
+            for region in ['complete', 'every 4 alternating']:
                 for mod in [2]:
                     val = 0.01
 
@@ -216,10 +232,13 @@ if __name__ == '__main__':
                             optimizer.step()
                             #interpolation_value.append(gd.alpha.item())
                         else:
-                            #gd.condition = torch.nn.Parameter(
-                            #    get_shifted_embedding(max_cond, gd.default_std, gd.default_mean))
-                            #gd.condition.requires_grad = True
-                            #optimizer_condition = gd.get_optimizer(eta, 'AdamOnLion')
+                            #if (i + 1) % 100 == 0:
+                            #    gd.condition = torch.nn.Parameter(
+                            #        get_shifted_embedding(gd.condition, gd.default_std, gd.default_mean))
+                            #    gd.condition.requires_grad = True
+                            #    optimizer_condition = gd.get_optimizer(eta, 'AdamOnLion')
+
+
                             val = val + 0.00495
                             print('update initial latents')
                             print(val)
@@ -234,9 +253,19 @@ if __name__ == '__main__':
                             pil_img.save(f'output/interpolation/{eta}/{dir_num}/A_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
                             del pil_img
 
+                            pil_img = ldm.embedding_2_img('', gd.get_text_embedding(), save_img=False,
+                                                          dim=dim, return_pil=True,
+                                                          return_latents=False,
+                                                          keep_init_latents=False,
+                                                          seed=205620)
+
+                            pil_img.save(
+                                f'output/interpolation/{eta}/{dir_num}/B_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
+                            del pil_img
 
 
                     #plot_scores(interpolation_value, f'output/interpolation/{eta}/{dir_num}/interpolation_values.jpg',
                     #            x_label='Iterations',
                     #            y_label='alpha')
+                    #plt.clf()
                     #plt.clf()
