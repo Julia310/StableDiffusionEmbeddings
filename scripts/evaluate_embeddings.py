@@ -8,6 +8,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 seeds = [222261, 1332]
+seeds = [205620, 683395, 370813, 23916, 635868, 752801, 543920, 354007, 466388, 662243, 871288, 935806, 329084, 466388, 100]
+
+
+
 prompts = [
     'highly detailed photoreal eldritch biomechanical rock monoliths, stone obelisks, aurora borealis, psychedelic',
     'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
@@ -119,9 +123,11 @@ def extract_numbers_from_dirs(base_dir: str, window_size=10) -> dict:
     return results
 
 
+embeddings_to_images()
 base_directory = './output/metric_based/a beautiful painting of a peaceful lake in th'
 result = extract_numbers_from_dirs(base_directory)
 for dir_number, file_numbers in result.items():
     print(f"Directory {dir_number}: {file_numbers}")
 
 print()
+
