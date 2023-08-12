@@ -248,20 +248,20 @@ if __name__ == '__main__':
                                                                                         dim=dim, return_pil=True,
                                                                                         return_latents=False,
                                                           keep_init_latents=False,
-                                                          seed=seed)
+                                                          seed=828555)
 
                             pil_img.save(f'output/interpolation/{eta}/{dir_num}/A_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
                             del pil_img
 
-                            pil_img = ldm.embedding_2_img('', gd.get_text_embedding(), save_img=False,
-                                                          dim=dim, return_pil=True,
-                                                          return_latents=False,
-                                                          keep_init_latents=False,
-                                                          seed=205620)
-
-                            pil_img.save(
-                                f'output/interpolation/{eta}/{dir_num}/B_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
-                            del pil_img
+                            #pil_img = ldm.embedding_2_img('', gd.get_text_embedding(), save_img=False,
+                            #                              dim=dim, return_pil=True,
+                            #                              return_latents=False,
+                            #                              keep_init_latents=False,
+                            #                              seed=495813)#828555
+#
+                            #pil_img.save(
+                            #    f'output/interpolation/{eta}/{dir_num}/B_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
+                            #del pil_img
 
 
                     #plot_scores(interpolation_value, f'output/interpolation/{eta}/{dir_num}/interpolation_values.jpg',
