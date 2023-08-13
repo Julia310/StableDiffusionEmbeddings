@@ -28,11 +28,12 @@ image_history_interpolation_valie = [[None, None]] * 5
 interpolation_val = [[None, None, None]] * 5
 condition_list = [None] * 5
 
+tsne_img = None
 no_of_selections = 0
 img_dir = None
 
 
-def get_interpolated_conditions(cond1, cond2, interpolation_val, method='lerp'):
+def get_interpolated_conditions(cond1, cond2, interpolation_val, method='slerp'):
     if method == 'lerp':
         return ldm.lerp(cond1, cond2, interpolation_val)
     else:
@@ -251,7 +252,7 @@ def create_dim_reduction_plot():
 
 
 def update_images(choice, selection_effect):
-    global image_list, current_image, previous_image, no_of_selections
+    global image_list, current_image, previous_image, no_of_selections, tsne_img
 
     if choice == 0:
         no_selections_list = ['# <p style="text-align: center;">' + str(no_of_selections - i) + '</p>'
@@ -268,7 +269,7 @@ def update_images(choice, selection_effect):
         f'<p style="text-align: center;">{interpolation_val[3][0]}</p>', f'<p style="text-align: center;">{interpolation_val[3][1]}</p>', \
         no_selections_list[4], image_history[4][0], image_history[4][1], image_history[4][2], \
         f'<p style="text-align: center;">{interpolation_val[4][0]}</p>', f'<p style="text-align: center;">{interpolation_val[4][1]}</p>', \
-        create_dim_reduction_plot()
+        tsne_img
 
     no_of_selections += 1
 
@@ -292,6 +293,7 @@ def update_images(choice, selection_effect):
     torch.save(target_condition, os.path.join(img_dir, 'selected', 'cond_binary', f'{no_of_selections - 1}_{selection_effect}_tensor.pt'))
     current_image.save(os.path.join(img_dir, 'results', f'{no_of_selections}_{global_prompt[0:30].strip()}.jpg'))
     torch.save(current_condition, os.path.join(img_dir, 'results', 'cond_binary', f'{no_of_selections}_tensor.pt'))
+    tsne_img = create_dim_reduction_plot()
 
 
 
@@ -307,7 +309,7 @@ def update_images(choice, selection_effect):
         f'<p style="text-align: center;">{interpolation_val[3][0]}</p>', f'<p style="text-align: center;">{interpolation_val[3][1]}</p>', \
         no_selections_list[4], image_history[4][0], image_history[4][1], image_history[4][2], \
         f'<p style="text-align: center;">{interpolation_val[4][0]}</p>', f'<p style="text-align: center;">{interpolation_val[4][1]}</p>', \
-        create_dim_reduction_plot()
+        tsne_img
 
 
 
@@ -378,7 +380,7 @@ with gr.Blocks(css=css) as demo:
             gr_image5 = gr.Image(elem_id="Img5", elem_classes="selected-image", label="Image5", interactive=True)
             storage_box = gr.Textbox(elem_id="choice_storage", visible=False)
         with gr.Row():
-            #choice = gr.Radio(["Img1", "Img2", "Img3", "Img4", "Img5"], label="Select an Image", visible=False)
+            choice = gr.Radio(["Img1", "Img2", "Img3", "Img4", "Img5"], label="Select an Image", visible=False)
             with gr.Column():
                 selection_effect = gr.Slider(elem_id="slider", label="Interpolation Value", minimum=0.0, maximum=1.0)
             with gr.Column():
@@ -530,7 +532,7 @@ function initListeners() {
 
     btn_generate.click(
         update_images,
-        inputs=[storage_box, selection_effect],
+        inputs=[choice, selection_effect],
         outputs=[gr_image1, gr_image2, gr_image3, gr_image4, gr_image5, curr_image,
                  iteration1, previous_choice1, previous_image1, image_1,
                  markdown2, markdown1,
@@ -572,4 +574,4 @@ function resetHighlightAndGenerate() {
 """
     )
 
-demo.launch(share=True)
+demo.launch()
