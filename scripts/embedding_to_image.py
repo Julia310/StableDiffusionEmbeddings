@@ -1,7 +1,6 @@
 from ldm.stable_diffusion import StableDiffusion
 import torch
 import os
-from utils.image_generation import get_random_seeds
 
 
 ldm = StableDiffusion(device='cuda')
