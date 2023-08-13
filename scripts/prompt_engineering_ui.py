@@ -52,7 +52,7 @@ def generate_image(curr_prompt):
         keep_init_latents=False
     )
     current_image.save(os.path.join(img_dir, f'{no_of_images}.jpg'))
-    torch.save(embedding[1, :, :], os.path.join(img_dir, 'cond_binary', f'{no_of_images}_tensor.pt'))
+    torch.save(embedding[1, :, :].unsqueeze(0), os.path.join(img_dir, 'cond_binary', f'{no_of_images}_tensor.pt'))
 
     return current_image
 
