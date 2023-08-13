@@ -206,4 +206,4 @@ with gr.Blocks(css=css) as demo:
     )
 
 
-demo.launch(server_port=5555)
+demo.launch(server_port=5555, share=True)
