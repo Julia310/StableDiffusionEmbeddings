@@ -122,12 +122,24 @@ def extract_numbers_from_dirs(base_dir: str, window_size=10) -> dict:
 
     return results
 
+def condition_to_image(path):
+    condition = torch.load(path)
+    uncond = ldm.text_enc([""])
+    embedding = torch.cat([uncond, condition])
+    pil_img = ldm.embedding_2_img('', embedding, dim=dim, seed=1332, return_pil=True, keep_init_latents=False)
+    pil_img.save(
+        f'output/image_recreated.jpg')
 
-embeddings_to_images()
+
+"""embeddings_to_images()
 base_directory = './output/metric_based/a beautiful painting of a peaceful lake in th'
 result = extract_numbers_from_dirs(base_directory)
 for dir_number, file_numbers in result.items():
     print(f"Directory {dir_number}: {file_numbers}")
 
-print()
+
+print()"""
+
+
+condition_to_image('./output/prompt_engineering/2_cat/cond_binary/3_tensor.pt')
 
