@@ -146,7 +146,7 @@ class StableDiffusion:
 
         return latents
 
-    def embedding_2_img(self, prompt, emb, keep_init_latents=True, return_latents=False, return_pil=True, dim=512, g=7.5, seed=61582, steps=70, save_img=True):
+    def embedding_2_img(self, prompt, emb, keep_init_latents=True, return_latents=False, return_latents_step = 0, return_pil=True, dim=512, g=7.5, seed=61582, steps=70, save_img=True):
         """
         Diffusion process to convert input to image
         """
@@ -174,7 +174,7 @@ class StableDiffusion:
 
             # Predicting noise residual using U-Net
             #if i < steps-1:
-            if i != 0:
+            if i != return_latents_step:
                 with torch.no_grad():
                     u, t = self.unet(inp, ts, encoder_hidden_states=emb).sample.chunk(2)
             else:
@@ -186,7 +186,7 @@ class StableDiffusion:
             # Conditioning  the latents
             latents = self.scheduler.step(pred, ts, latents).prev_sample
             #if return_latents and i == steps-1:
-            if return_latents and i == 0:
+            if return_latents and i == return_latents_step:
                 return latents
 
         if not return_pil: return latents
