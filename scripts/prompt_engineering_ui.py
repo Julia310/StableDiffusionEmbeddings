@@ -2,6 +2,7 @@ import gradio as gr
 import os
 from ldm.stable_diffusion import StableDiffusion
 import json
+import torch
 
 
 ldm = StableDiffusion(device='cuda')
@@ -37,19 +38,22 @@ def set_img_directory(prompt):
 
     # Create the directory
     img_dir = os.path.join(base_path, new_dir_name)
-    os.makedirs(img_dir)
+    os.makedirs(os.path.join(img_dir, 'cond_binary'))
 
 
 def generate_image(curr_prompt):
+    embedding = ldm.get_embedding([curr_prompt])[0]
     current_image = ldm.embedding_2_img(
         '',
-        ldm.get_embedding([curr_prompt])[0],
+        embedding,
         seed=global_seed,
         return_pil=True,
         save_img=False,
         keep_init_latents=False
     )
     current_image.save(os.path.join(img_dir, f'{no_of_images}.jpg'))
+    torch.save(embedding[1, :, :], os.path.join(img_dir, 'cond_binary', f'{no_of_images}_tensor.pt'))
+
     return current_image
 
 
@@ -90,7 +94,6 @@ def update_image(prompt):
     update_history()
     no_images_list = ['# <p style="text-align: center;">' + str(no_of_images - i) + '</p>'
                       if no_of_images - i > 0 else None for i in range(5)]
-    print(no_images_list)
 
     current_image = generate_image(prompt)
     current_prompt = prompt
@@ -203,4 +206,4 @@ with gr.Blocks(css=css) as demo:
     )
 
 
-demo.launch(server_port=5555, share=True)
+demo.launch(server_port=5555)
