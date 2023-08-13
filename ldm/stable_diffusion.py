@@ -116,18 +116,28 @@ class StableDiffusion:
             latents = latents.to(self.device).half() * self.scheduler.init_noise_sigma
         return latents
 
-    def slerp(self, latents1, latents2, val):
-        low_norm = latents1 / torch.norm(latents1, dim=1, keepdim=True)
-        high_norm = latents2 / torch.norm(latents2, dim=1, keepdim=True)
+
+    def slerp(self, embedding1, embedding2, val):
+        embedding1 = embedding1[0]
+        embedding2 = embedding2[0]
+        low_norm = embedding1 / torch.norm(embedding1, dim=1, keepdim=True)
+        high_norm = embedding2 / torch.norm(embedding2, dim=1, keepdim=True)
         dot = (low_norm * high_norm).sum(1)
-
-        if dot.mean() > 0.9995:
-            return latents1 * (1 - val) + latents2 * val
-
         omega = torch.acos(dot)
         so = torch.sin(omega)
-        res = (torch.sin((1.0 - val) * omega) / so).unsqueeze(1) * latents1 + (torch.sin(val * omega) / so).unsqueeze(
-            1) * latents2
+        faktor1 = (torch.sin((1.0 - val) * omega) / so).unsqueeze(1).unsqueeze(0)
+        mask = torch.isnan(faktor1)
+        mean = torch.mean(faktor1[~mask])
+        faktor1[mask] = mean
+        #if torch.isnan(faktor1[0, 0, 0]):
+        #    faktor1[0, 0, 0] = 0.5
+        faktor2 = (torch.sin(val * omega) / so).unsqueeze(1).unsqueeze(0)
+        mask = torch.isnan(faktor2)
+        mean = torch.mean(faktor2[~mask])
+        faktor2[mask] = mean
+        #if torch.isnan(faktor2[0, 0, 0]):
+        #    faktor2[0, 0, 0] = 0.5
+        res = faktor1 * embedding1 + faktor2 * embedding2
         return res
 
     def embedding_2_img(self, prompt, emb, keep_init_latents=True, return_pil=True, dim=512, g=7.5, seed=61582, steps=70, save_img=True):
