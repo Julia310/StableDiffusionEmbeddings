@@ -574,4 +574,4 @@ function resetHighlightAndGenerate() {
 """
     )
 
-demo.launch()
+demo.launch(share=True)
