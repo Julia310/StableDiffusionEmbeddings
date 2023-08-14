@@ -187,9 +187,15 @@ if __name__ == '__main__':
             optimizer = gd.get_optimizer(eta, 'AdamOnLion')
             lat_idx = 0
             for i in range(200):
-                if i >= 40:
+                if i == 40:
                     lat_idx = 1
                     val = 0.01
+                    with torch.no_grad():
+                        del gd.target_latents
+                        gd.target_latents = ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], save_img=False, dim=dim,
+                                                             seed=target_seed, return_pil=False, return_latents_step=lat_idx,
+                                                             return_latents=True, keep_init_latents=False)
+                    print('target latents updated !!!!!!!!!!!!!!!!!!!!!')
                 seed_batch = seeds[i % len(seeds)]
                 optimizer.zero_grad()
 
