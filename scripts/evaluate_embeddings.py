@@ -6,16 +6,22 @@ import os
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+from utils.image_generation import get_random_seeds
 
-seeds = [222261, 1332]
-seeds = [205620, 683395, 370813, 23916, 635868, 752801, 543920, 354007, 466388, 662243, 871288, 935806, 329084, 466388, 100]
+
+seeds = [#952012, 456825, 15513, 514917, 313354, 919728, 915611, 953840, 978214, 688244
+#952561, 437443, 850810, 710085, 279155, 784669, 2258, 360058, 970741, 126198
+#562885, 896353, 724092, 401237, 134930, 944704, 707118, 723123, 510649, 92071
+#34158, 937241, 9330, 550112, 588423, 995257, 942594, 900060, 186981, 607337
+289969, 658329, 174702, 101057, 958738, 504677, 202246, 266928, 944759, 135069
+         ]
 
 
 
 prompts = [
     'highly detailed photoreal eldritch biomechanical rock monoliths, stone obelisks, aurora borealis, psychedelic',
-    'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
-    'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
+    #'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
+    #'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 ]
 
 dim = 512
@@ -73,6 +79,8 @@ def extract_numbers_from_dirs(base_dir: str, window_size=10) -> dict:
     fig, axs = plt.subplots(3, 1, figsize=(10, 20), sharex=True)
 
     results = {}
+    results_smoothed = {}
+    interval_dict = {}
 
     dirs = os.listdir(base_dir)
 
@@ -95,30 +103,59 @@ def extract_numbers_from_dirs(base_dir: str, window_size=10) -> dict:
 
             lines = results[dir_number]
             smoothed_scores = np.convolve(lines, np.ones(window_size) / window_size, mode='valid')
+            results_smoothed[dir_number] = smoothed_scores
+            interval_dict = {}
+
 
             # Plot on the respective subplot with label as dir_number
-            axs[line_cnt % 3].plot(range(window_size - 1, len(lines)), smoothed_scores, label=f'{dir_number}')
-            axs[line_cnt % 3].legend()  # Display the legend
+        #    """try:
+        #        axs[line_cnt % 3].plot(range(window_size - 1, len(lines)), smoothed_scores, label=f'{dir_number}')
+        #    except: continue
+        #    axs[line_cnt % 3].legend()  # Display the legend
+#
+        #    line_cnt += 1
+#
+        #    # Adjust labels
+        #    if line_cnt % 3 == 0:
+        #        axs[(line_cnt // 3) % 3].set_ylabel('Score')
+        #        axs[(line_cnt // 3) % 3].set_xlabel('Iterations')
+#
+        #    # Save and clear the figure after 9 lines
+        #    if line_cnt % 9 == 0 and line_cnt != 0:
+        #        fig.savefig(f'./output/{int(line_cnt / 9)}_plot.png')
+        #        plt.close(fig)  # close the figure
+#
+        #        # Recreate the figure for the next 3 subplots
+        #        fig, axs = plt.subplots(3, 1, figsize=(10, 20), sharex=True)
+#
+        ## Save remaining subplots
+        #if line_cnt % 9 != 0:
+        #    fig.savefig(f'./output/metric_based/{int(line_cnt / 9) + 1}_plot.png')
+        #    plt.close(fig)"""
 
-            line_cnt += 1
+    for i in range(len(results_smoothed)):
+        interval_dict[i] = [results_smoothed[key][i] for key in results_smoothed]
 
-            # Adjust labels
-            if line_cnt % 3 == 0:
-                axs[(line_cnt // 3) % 3].set_ylabel('Score')
-                axs[(line_cnt // 3) % 3].set_xlabel('Iterations')
+    means = [np.mean(results_smoothed[key]) for key in results_smoothed]
+    std_devs = [np.std(results_smoothed[key]) for key in results_smoothed]
 
-            # Save and clear the figure after 9 lines
-            if line_cnt % 9 == 0 and line_cnt != 0:
-                fig.savefig(f'./output/{int(line_cnt / 9)}_plot.png')
-                plt.close(fig)  # close the figure
+    means_minus_std_dev = [mean - std_dev for mean, std_dev in zip(means, std_devs)]
+    means_plus_std_dev = [mean + std_dev for mean, std_dev in zip(means, std_devs)]
 
-                # Recreate the figure for the next 3 subplots
-                fig, axs = plt.subplots(3, 1, figsize=(10, 20), sharex=True)
+    x_values = range(len(means))
 
-        # Save remaining subplots
-        if line_cnt % 9 != 0:
-            fig.savefig(f'./output/metric_based/{int(line_cnt / 9) + 1}_plot.png')
-            plt.close(fig)
+    plt.figure() #figsize=(10, 6)
+    plt.plot(x_values, means, color='blue', label='Mean')
+    plt.fill_between(x_values, means_minus_std_dev, means_plus_std_dev, color='blue', alpha=0.2,
+                     label='Confidence Interval')
+
+    plt.title("Mean with Confidence Interval")
+    plt.xlabel("X-axis Label")
+    plt.ylabel("Y-axis Label")
+    plt.legend()
+    plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+    plt.tight_layout()
+    plt.show()
 
     return results
 
@@ -131,15 +168,17 @@ def condition_to_image(path):
         f'output/image_recreated.jpg')
 
 
-"""embeddings_to_images()
-base_directory = './output/metric_based/a beautiful painting of a peaceful lake in th'
-result = extract_numbers_from_dirs(base_directory)
-for dir_number, file_numbers in result.items():
-    print(f"Directory {dir_number}: {file_numbers}")
+embeddings_to_images()
+
+#base_directory = './output/metric_based/a beautiful painting of a peaceful lake in th'
+#result = extract_numbers_from_dirs(base_directory)
+#for dir_number, file_numbers in result.items():
+#    print(f"Directory {dir_number}: {file_numbers}")
 
 
-print()"""
+#print()
 
 
-condition_to_image('./output/prompt_engineering/2_cat/cond_binary/3_tensor.pt')
+#condition_to_image('./output/prompt_engineering/2_cat/cond_binary/3_tensor.pt')
+#print(get_random_seeds(100))
 
