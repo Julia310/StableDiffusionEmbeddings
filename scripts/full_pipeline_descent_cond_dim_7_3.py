@@ -39,6 +39,8 @@ seeds = [
     [205620, 683395, 370813]
 ]
 
+seed_list = [683395, 297009, 23916, 417016]
+
 target_seed = 510675
 #target_seed = 683395
 dim = 512
@@ -53,8 +55,8 @@ ldm = StableDiffusion(device=device)
 # prompt = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
 #         'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 
-#prompt = 'Single Color Ball'
-prompt = 'Glass cube'
+prompt = 'Single Color Ball'
+#prompt = 'Glass cube'
 prompt = "Glass cube, sharp focus, highly detailed, 3 d, rendered, octane render"
 
 #prompt2 = 'Black Single Color Ball'
@@ -186,7 +188,7 @@ if __name__ == '__main__':
 
             optimizer = gd.get_optimizer(eta, 'AdamOnLion')
             lat_idx = 0
-            for i in range(200):
+            for i in range(120):
                 if i == 40:
                     lat_idx = 1
                     val = 0.01
@@ -205,7 +207,8 @@ if __name__ == '__main__':
                                                              seed=target_seed, return_pil=False, return_latents_step=lat_idx,
                                                              return_latents=True, keep_init_latents=False)
                     print('target latents updated !!!!!!!!!!!!!!!!!!!!!')
-                seed_batch = seeds[i % len(seeds)]
+                #seed_batch = seeds[i % len(seeds)]
+                seed_batch = seed_batch = get_random_seeds(3)
                 optimizer.zero_grad()
 
                 score = gd.forward(lat_idx, score_metric, seed_batch)
@@ -232,3 +235,12 @@ if __name__ == '__main__':
                 pil_img.save(
                     f'output/seed_ind_gen/7_3/{eta}/{dir_num}/417016_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
                 del pil_img
+
+    with torch.no_grad():
+        torch.save(gd.get_text_embedding(), f'output/seed_ind_gen/7_3/{eta}/{dir_num}/tensor.pt')
+        for seed in seed_list:
+            pil_img = ldm.embedding_2_img('', gd.get_text_embedding(), save_img=False, dim=dim,
+                                                 seed=target_seed, return_pil=True, return_latents=False,
+                                                 keep_init_latents=False)
+            pil_img.save(
+                f'output/seed_ind_gen/7_3/{eta}/{dir_num}/{seed}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
