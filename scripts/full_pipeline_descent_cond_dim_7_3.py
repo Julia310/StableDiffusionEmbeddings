@@ -196,6 +196,15 @@ if __name__ == '__main__':
                                                              seed=target_seed, return_pil=False, return_latents_step=lat_idx,
                                                              return_latents=True, keep_init_latents=False)
                     print('target latents updated !!!!!!!!!!!!!!!!!!!!!')
+                if i == 80:
+                    lat_idx = 2
+                    val = 0.01
+                    with torch.no_grad():
+                        del gd.target_latents
+                        gd.target_latents = ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], save_img=False, dim=dim,
+                                                             seed=target_seed, return_pil=False, return_latents_step=lat_idx,
+                                                             return_latents=True, keep_init_latents=False)
+                    print('target latents updated !!!!!!!!!!!!!!!!!!!!!')
                 seed_batch = seeds[i % len(seeds)]
                 optimizer.zero_grad()
 
