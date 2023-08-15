@@ -58,7 +58,8 @@ ldm = StableDiffusion(device=device)
 prompt = 'Single Color Ball'
 #prompt = 'Glass cube'
 prompt = "Glass cube, sharp focus, highly detailed, 3 d, rendered, octane render"
-
+prompt = "an armchair made from an avocado"
+prompt = "super detailed color art, a sinthwave northern sunset with rocks on front, lake in the middle of perspective and mountains at background, unreal engine, retrowave color palette, 3d render, lowpoly, colorful, digital art"
 #prompt2 = 'Black Single Color Ball'
 
 
@@ -168,7 +169,7 @@ if __name__ == '__main__':
         target_init_latents = torch.clone(ldm.initial_latents)
 
 
-    for eta in [0.1]:
+    for eta in [0.1, 0.01]:
         os.mkdir(f'./output/seed_ind_gen/7_3/{eta}')
         for score_metric in ['Cosine Similarity']:
             val = 0.01
@@ -207,7 +208,23 @@ if __name__ == '__main__':
                                                              seed=target_seed, return_pil=False, return_latents_step=lat_idx,
                                                              return_latents=True, keep_init_latents=False)
                     print('target latents updated !!!!!!!!!!!!!!!!!!!!!')
-                #seed_batch = seeds[i % len(seeds)]
+                if i == 120:
+                    lat_idx = 3
+                    val = 0.01
+                    with torch.no_grad():
+                        del gd.target_latents
+                        gd.target_latents = ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], save_img=False, dim=dim,
+                                                             seed=target_seed, return_pil=False, return_latents_step=lat_idx,
+                                                             return_latents=True, keep_init_latents=False)
+                    print('target latents updated !!!!!!!!!!!!!!!!!!!!!')
+                seed_batch = seeds[i % len(seeds)]
+                if i == 50:
+                    for seed in seed_list:
+                        pil_img = ldm.embedding_2_img('', gd.get_text_embedding(), save_img=False, dim=dim,
+                                                      seed=seed, return_pil=True, return_latents=False,
+                                                      keep_init_latents=False)
+                        pil_img.save(
+                            f'output/seed_ind_gen/7_3/{eta}/{dir_num}/{seed}_50_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
                 seed_batch = seed_batch = get_random_seeds(3)
                 optimizer.zero_grad()
 
@@ -236,11 +253,11 @@ if __name__ == '__main__':
                     f'output/seed_ind_gen/7_3/{eta}/{dir_num}/417016_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
                 del pil_img
 
-    with torch.no_grad():
-        torch.save(gd.get_text_embedding(), f'output/seed_ind_gen/7_3/{eta}/{dir_num}/tensor.pt')
-        for seed in seed_list:
-            pil_img = ldm.embedding_2_img('', gd.get_text_embedding(), save_img=False, dim=dim,
-                                                 seed=target_seed, return_pil=True, return_latents=False,
-                                                 keep_init_latents=False)
-            pil_img.save(
-                f'output/seed_ind_gen/7_3/{eta}/{dir_num}/{seed}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
+        with torch.no_grad():
+            torch.save(gd.get_text_embedding(), f'output/seed_ind_gen/7_3/{eta}/{dir_num}/tensor.pt')
+            for seed in seed_list:
+                pil_img = ldm.embedding_2_img('', gd.get_text_embedding(), save_img=False, dim=dim,
+                                                     seed=seed, return_pil=True, return_latents=False,
+                                                     keep_init_latents=False)
+                pil_img.save(
+                    f'output/seed_ind_gen/7_3/{eta}/{dir_num}/{seed}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
