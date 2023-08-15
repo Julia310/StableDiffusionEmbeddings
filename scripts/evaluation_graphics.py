@@ -65,7 +65,7 @@ for alpha in range(-8, 9):
                                         save_img=False
                                         )
         image_list_row.append(pil_image)
-    image_list.append(image_list_row)
+    image_list.append(list(reversed(image_list_row)))
 combined_image = create_combined_image(image_list)
-combined_image.save(f'{seed}_{target_seed}.png')
+combined_image.save(f'./output/{seed}_{target_seed}.png')
 
