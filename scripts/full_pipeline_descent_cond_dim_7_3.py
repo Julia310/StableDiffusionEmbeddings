@@ -58,8 +58,8 @@ ldm = StableDiffusion(device=device)
 prompt = 'Single Color Ball'
 #prompt = 'Glass cube'
 prompt = "Glass cube, sharp focus, highly detailed, 3 d, rendered, octane render"
-prompt = "an armchair made from an avocado"
-prompt = "super detailed color art, a sinthwave northern sunset with rocks on front, lake in the middle of perspective and mountains at background, unreal engine, retrowave color palette, 3d render, lowpoly, colorful, digital art"
+#prompt = "an armchair made from an avocado"
+#prompt = "super detailed color art, a sinthwave northern sunset with rocks on front, lake in the middle of perspective and mountains at background, unreal engine, retrowave color palette, 3d render, lowpoly, colorful, digital art"
 #prompt2 = 'Black Single Color Ball'
 
 
@@ -169,7 +169,7 @@ if __name__ == '__main__':
         target_init_latents = torch.clone(ldm.initial_latents)
 
 
-    for eta in [0.1, 0.01]:
+    for eta in [0.1]:
         os.mkdir(f'./output/seed_ind_gen/7_3/{eta}')
         for score_metric in ['Cosine Similarity']:
             val = 0.01
