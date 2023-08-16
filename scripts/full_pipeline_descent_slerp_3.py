@@ -14,8 +14,11 @@ seeds = [
     [466388, 662243, 871288],
     [935806, 329084, 466388]
 ]
-target_seed = 510675
-#target_seed = 683395
+
+seeds = [[417016]]
+
+#target_seed = 510675
+target_seed = 683395
 dim = 512
 
 device = 'cuda'
@@ -30,7 +33,7 @@ ldm = StableDiffusion(device=device)
 
 prompt = 'Single Color Ball'
 
-prompt2 = 'Black Single Color Ball'
+prompt2 = 'Blue Single Color Ball'
 
 
 def create_next_directory(directory):
@@ -151,11 +154,11 @@ if __name__ == '__main__':
 
 
 
-    for eta in [0.01, 0.1, 1., 10., 100.]:
+    for eta in [0.1]:
         os.mkdir(f'./output/interpolation/{eta}')
-        for score_metric in ['Cosine Similarity', 'Euclidean Distance']:
-            for region in ['complete', 'every 4', 'every 4 alternating', 'center']:
-                for mod in [2, 10]:
+        for score_metric in ['Cosine Similarity']:
+            for region in ['complete']:
+                for mod in [2]:
                     val = 0.01
 
 
@@ -181,6 +184,7 @@ if __name__ == '__main__':
                     optimizer = gd.get_optimizer(eta, 'AdamOnLion')
 
                     interpolation_value = [-5.]
+                    values = []
                     cnt = 0
                     batch_cnt = 0
 
@@ -201,22 +205,25 @@ if __name__ == '__main__':
                             loss.backward(retain_graph=True)
                             optimizer.step()
                             interpolation_value.append(gd.alpha.item())
+                            values.append([val, gd.alpha.item()])
+
                         else:
                             val = val + 0.0099
                             print('update initial latents')
                             print(val)
                             gd.val = val
 
-                            pil_img = ldm.embedding_2_img('', gd.get_text_embedding(), save_img=False,
-                                                                                        dim=dim, return_pil=True,
-                                                                                        return_latents=False,
-                                                          keep_init_latents=False,
-                                                          seed=seed)
-
-                            pil_img.save(f'output/interpolation/{eta}/{dir_num}/A_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
-
+                            #pil_img = ldm.embedding_2_img('', gd.get_text_embedding(), save_img=False,
+                            #                                                            dim=dim, return_pil=True,
+                            #                                                            return_latents=False,
+                            #                              keep_init_latents=False,
+                            #                              seed=seed)
+#
+                            #pil_img.save(f'output/interpolation/{eta}/{dir_num}/A_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
+#
 
                     plot_scores(interpolation_value, f'output/interpolation/{eta}/{dir_num}/interpolation_values.jpg',
                                 x_label='Iterations',
                                 y_label='alpha')
                     plt.clf()
+                    print(values)

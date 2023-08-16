@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import os
 
 seed = 417016
-seed2 = 683395
+seed2seed2 = 683395
 seeds = [
     [417016, 683395, 370813],
     [222261, 23916, 635868],
