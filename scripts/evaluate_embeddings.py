@@ -1,6 +1,6 @@
 from ldm.stable_diffusion import StableDiffusion
 import torch
-from aesthetic_predictor.simple_inference import AestheticPredictor
+#from aesthetic_predictor.simple_inference import AestheticPredictor
 from torchvision.transforms import CenterCrop, Resize, Normalize, InterpolationMode
 import os
 import re
@@ -19,9 +19,9 @@ seeds = [#952012, 456825, 15513, 514917, 313354, 919728, 915611, 953840, 978214,
 
 
 prompts = [
-    'highly detailed photoreal eldritch biomechanical rock monoliths, stone obelisks, aurora borealis, psychedelic',
-    #'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
-    #'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
+    #'highly detailed photoreal eldritch biomechanical rock monoliths, stone obelisks, aurora borealis, psychedelic',
+    'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
+    'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
 ]
 
 dim = 512
@@ -29,7 +29,7 @@ dim = 512
 device = 'cuda'
 
 ldm = StableDiffusion(device=device)
-aesthetic_predictor = AestheticPredictor(device=device)
+#aesthetic_predictor = AestheticPredictor(device=device)
 
 
 def preprocess(rgb):
@@ -59,18 +59,8 @@ def embeddings_to_images():
 
 
 
-def extract_numbers_from_dirs(base_dir: str, window_size=10) -> dict:
-    """
-    Extract numbers from directories and files in a given directory.
+def create_confidence_interval_plot(base_dir: str) -> dict:
 
-    Args:
-    - base_dir (str): Path to the base directory.
-
-    Returns:
-    - dict: A dictionary where keys are the integers extracted from
-            directory names and values are lists of floats extracted
-            from file names inside each directory.
-    """
     # Regular expression pattern to match the directory name structure
     dir_pattern = re.compile(r'image_(\d+)')
     line_cnt = 0
@@ -102,60 +92,47 @@ def extract_numbers_from_dirs(base_dir: str, window_size=10) -> dict:
                 results[dir_number].append(file_number)
 
             lines = results[dir_number]
-            smoothed_scores = np.convolve(lines, np.ones(window_size) / window_size, mode='valid')
-            results_smoothed[dir_number] = smoothed_scores
+            #smoothed_scores = np.convolve(lines, np.ones(window_size) / window_size, mode='valid')
+            results_smoothed[dir_number] = lines
             interval_dict = {}
 
+    min_values = []
+    max_values = []
+    for i in range(len(lines)):
+        interval_dict[i] = list()
+        for key in results_smoothed:
+            try:
+                interval_dict[i].append(results_smoothed[key][i])
+            except: continue
+        #interval_dict[i] = [results_smoothed[key][i] for key in results_smoothed]
 
-            # Plot on the respective subplot with label as dir_number
-        #    """try:
-        #        axs[line_cnt % 3].plot(range(window_size - 1, len(lines)), smoothed_scores, label=f'{dir_number}')
-        #    except: continue
-        #    axs[line_cnt % 3].legend()  # Display the legend
-#
-        #    line_cnt += 1
-#
-        #    # Adjust labels
-        #    if line_cnt % 3 == 0:
-        #        axs[(line_cnt // 3) % 3].set_ylabel('Score')
-        #        axs[(line_cnt // 3) % 3].set_xlabel('Iterations')
-#
-        #    # Save and clear the figure after 9 lines
-        #    if line_cnt % 9 == 0 and line_cnt != 0:
-        #        fig.savefig(f'./output/{int(line_cnt / 9)}_plot.png')
-        #        plt.close(fig)  # close the figure
-#
-        #        # Recreate the figure for the next 3 subplots
-        #        fig, axs = plt.subplots(3, 1, figsize=(10, 20), sharex=True)
-#
-        ## Save remaining subplots
-        #if line_cnt % 9 != 0:
-        #    fig.savefig(f'./output/metric_based/{int(line_cnt / 9) + 1}_plot.png')
-        #    plt.close(fig)"""
-
-    for i in range(len(results_smoothed)):
-        interval_dict[i] = [results_smoothed[key][i] for key in results_smoothed]
-
-    means = [np.mean(results_smoothed[key]) for key in results_smoothed]
-    std_devs = [np.std(results_smoothed[key]) for key in results_smoothed]
+    means = [np.mean(interval_dict[key]) for key in interval_dict]
+    std_devs = [np.std(interval_dict[key]) for key in interval_dict]
 
     means_minus_std_dev = [mean - std_dev for mean, std_dev in zip(means, std_devs)]
     means_plus_std_dev = [mean + std_dev for mean, std_dev in zip(means, std_devs)]
 
+
+    keys = list(interval_dict.keys())
+
+    for i in range(len(keys)):
+        max_values.append(np.max(interval_dict[keys[i]]))
+        min_values.append(np.min(interval_dict[keys[i]]))
+
+
     x_values = range(len(means))
 
-    plt.figure() #figsize=(10, 6)
+    plt.figure()  # figsize=(10, 6)
     plt.plot(x_values, means, color='blue', label='Mean')
     plt.fill_between(x_values, means_minus_std_dev, means_plus_std_dev, color='blue', alpha=0.2,
                      label='Confidence Interval')
 
-    plt.title("Mean with Confidence Interval")
-    plt.xlabel("X-axis Label")
-    plt.ylabel("Y-axis Label")
-    plt.legend()
+    plt.xlabel("Iterations")
+    #plt.ylabel("Y-axis Label")
+    plt.legend(loc='lower right')
     plt.grid(True, which='both', linestyle='--', linewidth=0.5)
     plt.tight_layout()
-    plt.show()
+    plt.savefig(f'{prompts[0][0:45].strip()}.pdf', format='pdf')
 
     return results
 
@@ -168,10 +145,10 @@ def condition_to_image(path):
         f'output/image_recreated.jpg')
 
 
-embeddings_to_images()
+#embeddings_to_images()
 
-#base_directory = './output/metric_based/a beautiful painting of a peaceful lake in th'
-#result = extract_numbers_from_dirs(base_directory)
+base_directory = './output/metric_based/a beautiful painting of a peaceful lake in th'
+result = extract_numbers_from_dirs(base_directory)
 #for dir_number, file_numbers in result.items():
 #    print(f"Directory {dir_number}: {file_numbers}")
 
