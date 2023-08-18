@@ -5,7 +5,6 @@ from PIL import Image
 
 
 seed = 417016
-target_seed = 510675
 target_seed = 683395
 
 ldm = StableDiffusion(device='cuda')
