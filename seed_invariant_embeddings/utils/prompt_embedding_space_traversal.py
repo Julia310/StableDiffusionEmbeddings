@@ -13,8 +13,10 @@ target_seed = 683395
 
 ldm = StableDiffusion(device='cuda')
 
+constructed_image_path = f'./output/{seed}_{target_seed}.png'
 
-def create_combined_image(image_list):
+
+def construct_image(image_list):
     """Combine a list of images into one image."""
     # Get the dimensions of the first image in the list
     width, height = image_list[0][0].size
@@ -44,48 +46,49 @@ def load_ldm_conditions(prompt, prompt2):
 
 def extract_latents(prompt, seed, target_seed):
     with torch.no_grad():
-        ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], save_img=False,
-                            seed=target_seed, return_pil=False,
-                            return_latents=True, keep_init_latents=False)
+        ldm.embedding_2_img(ldm.get_embedding([prompt])[0],
+                            seed=target_seed,
+                            return_latents=True,
+                            keep_init_latents=False)
 
         target_init_latents = torch.clone(ldm.initial_latents)
-        ldm.embedding_2_img('', ldm.get_embedding([prompt])[0], seed=seed, return_latents=True,
+        ldm.embedding_2_img(ldm.get_embedding([prompt])[0],
+                            seed=seed,
+                            return_latents=True,
                             keep_init_latents=False)
         latents = torch.clone(ldm.initial_latents)
     return latents, target_init_latents
 
 
-def create_image_list(uncondition, initial_condition, target_condition, condition_row, latents, target_init_latents):
-    image_list = []
-
+def create_interpolated_image(uncondition, initial_condition, target_condition, condition_row, latents, target_init_latents):
+    image_list = list()
     for alpha in range(-8, 9):
         image_list_row = []
         condition = ldm.slerp(target_condition, initial_condition, torch.sigmoid(torch.tensor(alpha)))
         condition = torch.cat((condition_row.unsqueeze(dim=1), condition), dim=1)
         embedding = torch.cat([uncondition, condition])
-
         for i in range(21):
             beta = i * 0.05
+            print(beta)
             initial_latents = ldm.slerp(latents, target_init_latents, beta)
             ldm.initial_latents = initial_latents
-            pil_image = ldm.embedding_2_img('', embedding,
+            pil_image = ldm.embedding_2_img(embedding,
                                             return_pil=True,
-                                            keep_init_latents=True,
-                                            save_img=False
+                                            keep_init_latents=True
                                             )
             image_list_row.append(pil_image)
-
         image_list.append(list(reversed(image_list_row)))
-    return image_list
+    combined_image = construct_image(image_list)
+    combined_image.save(f'./output/{seed}_{target_seed}.png')
 
 
-def display_combined_image_with_graph(combined_image_path, values):
+def display_embedding_path_traversal(values):
     # Extract x and y values from the provided data
     x_values = [item[0] for item in values]
     y_values = [item[1] for item in values]
 
     # Load the combined image
-    combined_image = Image.open(combined_image_path)
+    combined_image = Image.open(constructed_image_path)
 
     # Display the image
     fig, ax = plt.subplots()
@@ -115,14 +118,10 @@ def main():
 
     initial_condition, target_condition, condition_row, uncondition = load_ldm_conditions(prompt, prompt2)
     latents, target_init_latents = extract_latents(prompt, seed, target_seed)
-    image_list = create_image_list(uncondition, initial_condition, target_condition, condition_row, latents,
-                                   target_init_latents)
+    create_interpolated_image(uncondition, initial_condition, target_condition, condition_row, latents,
+                                           target_init_latents)
 
-    combined_image_path = f'./output/{seed}_{target_seed}.png'
-    combined_image = create_combined_image(image_list)
-    combined_image.save(combined_image_path)
-
-    display_combined_image_with_graph(combined_image_path, values)
+    display_embedding_path_traversal(values)
 
 
 if __name__ == "__main__":

@@ -39,10 +39,10 @@ def preprocess(rgb):
 
 def embeddings_to_images():
     for seed in seeds:
-        if not os.path.exists(f'output/metric_based/{prompt[0:45].strip()}/image_{seed}'):
-            os.makedirs(f'output/metric_based/{prompt[0:45].strip()}/image_{seed}')
+        if not os.path.exists(f'output/metric_generalization/{prompt[0:45].strip()}/image_{seed}'):
+            os.makedirs(f'output/metric_generalization/{prompt[0:45].strip()}/image_{seed}')
         for i in range(300):
-            embedding = torch.load(f'./output/metric_based/{prompt[0:45].strip()}/embeddings/{i}_{prompt[0:45].strip()}.pt')
+            embedding = torch.load(f'./output/metric_generalization/{prompt[0:45].strip()}/embeddings/{i}_{prompt[0:45].strip()}.pt')
 
             latents = ldm.embedding_2_img('', embedding, dim=dim, seed=seed, return_pil=False, keep_init_latents=False)
             image = ldm.latents_to_image(latents, return_pil=False)
@@ -134,7 +134,7 @@ def condition_to_image(path):
 
 embeddings_to_images()
 
-base_directory = './output/metric_based/a beautiful painting of a peaceful lake in th'
+base_directory = './output/metric_generalization/a beautiful painting of a peaceful lake in th'
 create_confidence_interval_plot(base_directory)
 
 

@@ -1,5 +1,5 @@
 # Start from the Hugging Face PyTorch GPU image
-FROM huggingface/transformers-pytorch-gpu
+FROM huggingface/transformers-pytorch-gpu@sha256:b4b27504b33cce83235c1c330417dd667751512a5df6f3bae3a3bf6cff60d869
 
 # Set the working directory
 WORKDIR /workspace
@@ -14,4 +14,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /workspace/
 
 # Default command to run the script
-CMD ["python3", "scripts/prompt_embedding_space_traversal.py"]
+#CMD ["python3", "scripts/prompt_embedding_space_traversal.py"]
+#docker exec -it $CONTAINER_ID /bin/bash
+#docker run -it --entrypoint=/bin/bash $IMAGE -i

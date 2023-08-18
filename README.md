@@ -2,6 +2,10 @@
 
 ---
 
+## Deployment 
+is documented in the Dockerfile located at ./deployment/Dockerfile
+Python requirements are listed at ./deployment/requirements.txt
+
 ## **Figure 3**: Interpolation between Two Prompts
 
 Transform the following prompt:
@@ -25,8 +29,8 @@ Detailed information on the list of prompts is contained in ...
 ---
 
 ## Section 3.1: Metric-Based Optimization
+Please run download script for aesthetic predictor weights: *.sh
 
-This section focuses on the metric-based optimization.
 
 - **Source Code:** Code for this section is contained in ...
 - **Examples:** See below (Figures 7, 8, 9) for execution examples.

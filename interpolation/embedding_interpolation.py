@@ -36,7 +36,7 @@ if __name__ == '__main__':
         cond = torch.cat((cond_row.unsqueeze(dim=1), interpolated_cond), dim=1)
         emb = torch.cat([uncond, cond])
 
-        pil_image = ldm.embedding_2_img('', emb, seed=seed, return_pil=True, save_img=False)
+        pil_image = ldm.embedding_2_img(emb, seed=seed, return_pil=True)
         pil_image.save(f'output/{i + 1}_{prompt}.jpg')
 
 
