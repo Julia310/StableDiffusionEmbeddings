@@ -1,5 +1,5 @@
 import gradio as gr
-from scripts.full_pipeline_descent import get_image
+from metric_based_optimization.full_pipeline_descent import get_image
 
 with gr.Blocks() as demo:
     with gr.Row():
