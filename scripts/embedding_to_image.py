@@ -1,3 +1,8 @@
+import sys
+import platform
+if platform.system() == "Linux":
+    sys.path.append('/workspace')
+
 from ldm.stable_diffusion import StableDiffusion
 import torch
 import os
