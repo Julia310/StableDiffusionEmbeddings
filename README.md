@@ -1,6 +1,4 @@
-# GitHub Repository README
-
-Welcome to our GitHub repository! This README provides a guide to the various sections, figures, and functionalities in our project.
+# Supplementary material for "Manipulating Embeddings of Stable Diffusion Prompts"
 
 ## Deployment 
 - **Docker Configuration:** Refer to the Dockerfile at `./deployment/Dockerfile`.
@@ -14,27 +12,27 @@ to
 
 - **Seed:** 824331
 - **Execution:** Run using `python3 ./interpolation/embedding_interpolation.py`
-- **Output:** Images can be found at `/output/beautiful mount_a beautiful an/`.
+- **Output:** Images can be found at `./output/beautiful mount_a beautiful an/`.
 
 ## Section 2.4: Prompt Datasets
 - Prompt list can be found in `./metric_based_optimization/datasets`.
 - `prompts.txt`: 
-  - A selection of 150 prompts from the diffusiondb: [Link](https://huggingface.co/datasets/poloclub/diffusiSondb)
+  - A selection of 150 prompts from the diffusiondb: [Available on huggingface](https://huggingface.co/datasets/poloclub/diffusiondb)
   - Selected subsets: `large_random_100k`, `large_random_1k`
   - Used for evaluating metric optimization.
 - `LAION-Aesthetic-V2-prompts.txt`: Prompts utilized for Figure 8.
 
 ## Section 3.1: Metric-Based Optimization
-To begin, run the download script for aesthetic predictor weights.
+To begin, download the aesthetic predictor model weights from the repository of its creators: https://github.com/christophschuhmann/improved-aesthetic-predictor/raw/fe88a163f4661b4ddabba0751ff645e2e620746e/sac%2Blogos%2Bava1-l14-linearMSE.pth and place the file under `./aesthetic_predictor/sac+logos+ava1-l14-linearMSE.pth` predictor weights.
 
 - **Source Code:** Find the code in:
   - `./metric_based_optimization/utils/aesthetic_metric_generalization.py` (Figure 9)
   - `./metric_based_optimization/full_pipeline_descent.py` (Figures 7 & 8)
-- **Result:** `/output/metric_generalization/highly detailed photoreal eldritch biomechani/`
+- **Result:** `./output/metric_generalization/highly detailed photoreal eldritch biomechani/`
 - **Examples:** Refer to Figures 7, 8, and 9.
 
 ## Section 3.2: Iterative Human Feedback
-- **User Interface:** The interface is showcased in Figure 4. Run with `python3 ./iterative_human_feedback/userinteraction.py`
+- **User Interface:** The interface is showcased in Figure 4. Run with `python3 ./iterative_human_feedback/user_interaction.py`
 - **Results:** See Figure 10.
 
 ## Figure 5: Images with Varying Seeds
@@ -44,7 +42,7 @@ To begin, run the download script for aesthetic predictor weights.
 
 ## Figure 6: Traversing the Prompt Embedding Space
 - **Execution:** Use `python3 ./seed_invariant_embeddings/prompt_embedding_space_traversal.py`
-- **Output:** `/output/universal_embeddings/embedding_space_traversal.pdf`
+- **Output:** `./output/universal_embeddings/embedding_space_traversal.pdf`
 - **Notes:** Interpolation values `[alpha]` and `[beta]` can be obtained by executing `python3 ./seed_invariant_embeddings/utils/universal_embeddings_slerp.py`. Check the final print statement for specific values.
 
 ## Figure 7: Optimizing Blurriness and Sharpness
@@ -59,18 +57,17 @@ To begin, run the download script for aesthetic predictor weights.
 
 ## Figure 9: Aesthetic Metrics across Different Seeds
 - **Execution:** Use `python3 ./metric_based_optimization/aesthetic_metric_generalization.py`
-- **Output:** `/output/metric_generalization/highly detailed photoreal eldritch biomechani/`
+- **Output:** `./output/metric_generalization/highly detailed photoreal eldritch biomechani/`
 
 ## Section 4.2: Advanced Iterative Human Feedback
-- **Prompt Engineering UI:** Launch the user interface for the prompt engineering reference method with ...
-- **Seed-Invariance Software:** Access the software for seed-invariance testing at ...
-- **User Study Questionnaires:** View the questionnaires for our user study ...
+- **Prompt Engineering UI:** Launch the user interface for the prompt engineering reference method with `python3 ./iterative_human_feedback/utils/prompt_engineering.py` (see above for how to run our proposed method)
+- **Seed-Invariance Software:** The software to generate the images with the given prompt embedding files can be found in `./iterative_human_feedback/utils/embeddings_to_image.py` (note that the parameter which prompt embedding input to use must be adjusted inside the file)
+- **User Study Questionnaires:** View the questionnaires for our user study in `./user_study`.
 
 ## Figure 10: User Study Image Showcase
-- **Resources:** Find images and prompt embeddings for this study in `./iterative_human_feedback/user_study`.
+- **Resources:** Find images and prompt embeddings for this study in `./user_study`.
 
 ## Figure 11: Unguided Seed-Invariant Embedding Method
 - **Execution:** Run using `python3 ./seed_invariant_embeddings/universal_embeddings.py`
 - **Results:** Check `./output/universal_embeddings`.
 
-Thank you for exploring our work. If you need additional details or clarifications, please refer to the mentioned sections or open an issue on this repository.
