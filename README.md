@@ -16,15 +16,21 @@ Transform the following prompt:
 
 - **Seed:** 824331
 
-- **Execution:** To run, execute `python3 ...`
+- **Execution:** To run, execute `python3 ./interpolation/embedding_interpolation.py`
 
-- **Output:** Created images are located in ...
+- **Output:** Created images are located in /output/beautiful mount_a beautiful an/
 
 ---
 
 ## Section 2.4: Prompt Datasets
-
-Detailed information on the list of prompts is contained in ...
+- 
+- list of prompts located in ./metric_based_optimization/datasets 
+- prompts.txt: 
+  - list of 150 randomly selected prompts from the diffusiondb (https://huggingface.co/datasets/poloclub/diffusiondb)
+  - selected subsets: large_random_100k, large_random_1k
+  - utilized to evaluate the metric optimization
+- LAION-Aesthetic-V2-prompts.txt
+  - prompts used to create Figure 8
 
 ---
 
@@ -33,6 +39,11 @@ Please run download script for aesthetic predictor weights: *.sh
 
 
 - **Source Code:** Code for this section is contained in ...
+- ./metric_based_optimization/utils/aesthetic_metric_generalization.py (Figure 9)
+- ./metric_based_optimization/full_pipeline_descent.py (Figure 7, 8)
+- Result: /output/metric_generalization/highly detailed photoreal eldritch biomechani/
+
+
 - **Examples:** See below (Figures 7, 8, 9) for execution examples.
 
 ---
@@ -41,7 +52,7 @@ Please run download script for aesthetic predictor weights: *.sh
 
 Here, we explore the iterative human feedback mechanisms.
 
-- **User Interface:** The UI, as illustrated in Figure 4, can be deployed using ...
+- **User Interface:** The UI, as illustrated in Figure 4, can be executed using `python3 ./iterative_human_feedback/userinteraction.py`
 - **Results:** See below (Figure 10) for the results.
 
 ---
@@ -56,18 +67,32 @@ Here, we explore the iterative human feedback mechanisms.
 ---
 
 ## Figure 6: Traversing the prompt embedding space
+- **Execution:** To run, execute `python3 ./seed_invariant_embeddings/prompt_embedding_space_traversal.py`
+- **Output:** /output/universal_embeddings/embedding_space_traversal.pdf
+- **Remark:** The values list in ./seed_invariant_embeddings/prompt_embedding_space_traversal.py corresponds to the interpolation values \[ \alpha \] and
+\[ \beta \], which can be obained by running `python3 ./seed_invariant_embeddings/utils/universal_embeddings_slerp.py`. The pythonlist values can than be found in the last print statement
+
 
 ---
 
 ## Figure 7: Optimizing blurriness and sharpness
+- In order to óptimize the blurriness/sharpness metric the methods increase_blurriness() and increase_sharpness() must be executed.
+- Therefore select the methods in main and execute: ./metric_based_optimization/full_pipeline_descent.py
+- Output: 
+  - Blurriness: ./output/metric_optimization/Blurriness/
+  - Sharpness : ./output/metric_optimization/Sharpness/
 
 ---
 
 ## Figure 8: Optimizing the aesthetics metric
+- For the optimization of the aesthetics metric the increase_aesthetic_score() method has to be executed located within ./metric_based_optimization/full_pipeline_descent.py
+- Output: ./output/metric_optimization/LAION-Aesthetics V2/
 
 ---
 
 ## Figure 9: Aesthetic metric for different seeds
+- **Execution:** To run, execute `python3 ./metric_based_optimization/aesthetic_metric_generalization.py`
+- **Output:** /output/metric_generalization/highly detailed photoreal eldritch biomechani/
 
 ---
 
@@ -83,14 +108,14 @@ This section delves deeper into the iterative human feedback mechanisms.
 
 ## Figure 10: Images created in our user study
 
-**Resources:** Images and prompt embeddings related to this study can be found ...
+**Resources:** Images and prompt embeddings related to this study can be found in ./iterative_human_feedback/user_study
 
 ---
 
 ## Figure 11: Unguided seed-invariant prompt embedding method
 
-**Instructions:** To run, execute...
-**Results:** All results can be located in ....
+**Instructions:** To run, execute `python3 ./seed_invariant_embeddings/universal_embeddings.py`
+**Results:** All results can be located in ./output/universal_embeddings
 
 ---
 
