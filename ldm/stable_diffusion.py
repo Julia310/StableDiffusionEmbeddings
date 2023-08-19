@@ -2,6 +2,7 @@ from transformers import CLIPTextModel, CLIPTokenizer
 import torch
 from diffusers import UNet2DConditionModel, LMSDiscreteScheduler, AutoencoderKL
 from tqdm import tqdm
+import os
 from PIL import Image
 from torchvision import transforms as tfms
 
@@ -95,26 +96,18 @@ class StableDiffusion:
 
         cov = self.get_cov(X, Y)
 
-        Z = (X + Y) * torch.sqrt(torch.std(embedding1) * torch.std(embedding2)) \
+        Z = (X + Y)
+        Z = Z * torch.sqrt(torch.std(embedding1) * torch.std(embedding2)) \
             / (torch.sqrt(torch.std(X) ** 2 + torch.std(Y) ** 2 + 2 * cov) + 1e-14)
         return Z
 
-    def lerp(self, embedding1, embedding2, noise):
 
+    def lerp(self, embedding1, embedding2, noise):
         X = embedding1 * (1 - noise)
         Y = embedding2 * noise
 
-        return X + Y
-
-    def set_initial_latents(self, dim):
-        latents = torch.randn((1, self.unet.in_channels, dim // 8, dim // 8))
-
-        # Adding noise to the latents
-        if self.device == "cpu":
-            latents = latents.to(self.device).float() * self.scheduler.init_noise_sigma
-        else:
-            latents = latents.to(self.device).half() * self.scheduler.init_noise_sigma
-        return latents
+        Z = (X + Y)
+        return Z
 
 
     def slerp(self, embedding1, embedding2, val):
@@ -129,18 +122,19 @@ class StableDiffusion:
         mask = torch.isnan(faktor1)
         mean = torch.mean(faktor1[~mask])
         faktor1[mask] = mean
-        #if torch.isnan(faktor1[0, 0, 0]):
-        #    faktor1[0, 0, 0] = 0.5
         faktor2 = (torch.sin(val * omega) / so).unsqueeze(1).unsqueeze(0)
         mask = torch.isnan(faktor2)
         mean = torch.mean(faktor2[~mask])
         faktor2[mask] = mean
-        #if torch.isnan(faktor2[0, 0, 0]):
-        #    faktor2[0, 0, 0] = 0.5
         res = faktor1 * embedding1 + faktor2 * embedding2
         return res
 
-    def embedding_2_img(self,  emb, keep_init_latents=True, return_latents=False, return_latents_step=0, return_pil=True, dim=512, g=7.5, seed=61582, steps=70):
+    def set_initial_latents(self, dim):
+        latents = torch.randn((1, self.unet.in_channels, dim // 8, dim // 8))
+
+        return latents
+
+    def embedding_2_img(self, emb, keep_init_latents=True, return_latents=False, return_latents_step = 0, return_pil=True, dim=512, g=7.5, seed=61582, steps=70):
         """
         Diffusion process to convert input to image
         """
@@ -186,5 +180,4 @@ class StableDiffusion:
         if not return_pil: return latents
 
         pil_image = self.latents_to_image(latents)[0]
-
         return pil_image

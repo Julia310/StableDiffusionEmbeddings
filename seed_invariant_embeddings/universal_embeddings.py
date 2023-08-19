@@ -1,3 +1,8 @@
+import sys
+import platform
+if platform.system() == "Linux":
+    sys.path.append('/workspace')
+
 from ldm.stable_diffusion import StableDiffusion
 from optimizer.adam_on_lion import AdamOnLion
 import torch
@@ -16,9 +21,10 @@ device = 'cuda'
 
 ldm = StableDiffusion(device=device)
 
-
-prompt = "super detailed color art, a sinthwave northern sunset with rocks on front, lake in the middle of perspective " \
-         "and mountains at background, unreal engine, retrowave color palette, 3d render, lowpoly, colorful, digital art"
+prompt = "Glass cube, sharp focus, highly detailed, 3 d, rendered, octane render"
+prompt = "Single Color Ball"
+#prompt = "super detailed color art, a sinthwave northern sunset with rocks on front, lake in the middle of perspective " \
+#         "and mountains at background, unreal engine, retrowave color palette, 3d render, lowpoly, colorful, digital art"
 
 
 def get_random_seeds(num_seeds):
@@ -96,8 +102,8 @@ if __name__ == '__main__':
         target_init_latents = torch.clone(ldm.initial_latents)
 
 
-    for eta in [0.01, 0.1]:
-        os.makedirs(f'./output/seed_ind_gen/{eta}', exist_ok=True)
+    for eta in [0.01]:
+        os.makedirs(f'./output/universal_embeddings/{prompt[0:45].strip()}/{eta}', exist_ok=True)
         val = 0.01
 
         gd = GradientDescent(
@@ -133,7 +139,7 @@ if __name__ == '__main__':
                         return_latents=False,
                         keep_init_latents=False
                     )
-                    pil_img.save(f'output/seed_ind_gen/{eta}/{seed}_50_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
+                    pil_img.save(f'output/universal_embeddings/{prompt[0:45].strip()}/{eta}/{seed}_50_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
 
 
             seed_batch = get_random_seeds(3)
@@ -156,12 +162,12 @@ if __name__ == '__main__':
                 keep_init_latents=False,
                 seed=417016
             )
-#
-            pil_img.save(f'output/seed_ind_gen/{eta}/417016_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
+
+            pil_img.save(f'output/universal_embeddings/{prompt[0:45].strip()}/{eta}/417016_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
             del pil_img
 
     with torch.no_grad():
-        torch.save(gd.get_text_embedding(), f'output/seed_ind_gen/{eta}/tensor.pt')
+        torch.save(gd.get_text_embedding(), f'output/universal_embeddings/{prompt[0:45].strip()}/{eta}/tensor.pt')
         for seed in seed_list:
             pil_img = ldm.embedding_2_img(
                 gd.get_text_embedding(),
@@ -170,4 +176,4 @@ if __name__ == '__main__':
                 return_latents=False,
                 keep_init_latents=False
             )
-            pil_img.save(f'output/seed_ind_gen/{eta}/{seed}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
+            pil_img.save(f'output/universal_embeddings/{prompt[0:45].strip()}/{eta}/{seed}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')

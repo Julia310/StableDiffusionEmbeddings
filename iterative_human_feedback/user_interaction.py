@@ -1,3 +1,8 @@
+import sys
+import platform
+if platform.system() == "Linux":
+    sys.path.append('/workspace')
+
 import gradio as gr
 import torch
 from ldm.stable_diffusion import StableDiffusion
@@ -83,11 +88,9 @@ def init_pipeline_params(prompt, seed):
     uncondition = ldm.text_enc([""], current_condition.shape[1])
 
     current_image = ldm.embedding_2_img(
-        '',
         torch.cat([uncondition, current_condition]),
         seed=seed,
         return_pil=True,
-        save_img=False,
         keep_init_latents=False
     )
 
@@ -277,10 +280,8 @@ def update_images(choice, selection_effect):
 
     previous_image = current_image.copy()
     current_image = ldm.embedding_2_img(
-        '',
         torch.cat([uncondition, current_condition]),
-        return_pil=True,
-        save_img=False
+        return_pil=True
     )
 
     image_list = [None] * 5
@@ -335,7 +336,7 @@ def get_images_for_selection():
         val = (1 - const) / (1 - compute_dot(cond_A, cond_B))
         print(val)
         condition_list[i] = get_interpolated_conditions(cond_A, cond_B, val)
-        image_list[i] = ldm.embedding_2_img('', torch.cat([uncondition, condition_list[i]]), return_pil=True, save_img=False)
+        image_list[i] = ldm.embedding_2_img(torch.cat([uncondition, condition_list[i]]), return_pil=True)
 
 
 css = """

@@ -1,53 +1,41 @@
+import sys
+import platform
+if platform.system() == "Linux":
+    sys.path.append('/workspace')
+
 from ldm.stable_diffusion import StableDiffusion
 from optimizer.adam_on_lion import AdamOnLion
 import torch
-from utils.create_graphics import plot_scores
 import matplotlib.pyplot as plt
 import os
 
 seed = 417016
 
-
-#target_seed = 510675
 target_seed = 683395
 dim = 512
 
 device = 'cuda'
-
 ldm = StableDiffusion(device=device)
 
 
-
-
-# prompt = 'a beautiful painting of a peaceful lake in the Land of the Dreams, full of grass, sunset, red horizon, ' \
-#         'starry-night!!!!!!!!!!!!!!!!!!!!,  Greg Rutkowski, Moebius, Mohrbacher, peaceful, colorful'
-
 prompt = 'Single Color Ball'
-
 prompt2 = 'Blue Single Color Ball'
 
+def plot_scores(scores, file_path, y_label='Score', x_label='Image'):
+    """
+    Create a line plot of aesthetic scores and save the image to the specified directory.
 
-def create_next_directory(directory):
-    numerical_directories = []
-
-    for item in os.listdir(directory):
-        item_path = os.path.join(directory, item)
-        if os.path.isdir(item_path) and item.isdigit():
-            numerical_directories.append(int(item))
-
-    if numerical_directories:
-        next_number = max(numerical_directories) + 1
-    else:
-        next_number = 1
-
-    new_directory_name = str(next_number)
-    new_directory_path = os.path.join(directory, new_directory_name)
-    os.mkdir(new_directory_path)
-
-    return next_number
+    Parameters:
+    scores (list): A list of aesthetic scores to plot.
+    save_dir (str): The directory to save the image to.
+    """
+    plt.plot(scores)
+    plt.ylabel(y_label)
+    plt.xlabel(x_label)
+    plt.savefig(file_path)
 
 
-def compute_dist_metric( target_latents, latents):
+def compute_dist_metric(target_latents, latents):
     score = 10000 * torch.nn.functional.cosine_similarity(
         target_latents.flatten(start_dim=1, end_dim=-1).to(torch.float64),
         latents.flatten(start_dim=1, end_dim=-1).to(torch.float64), dim=-1)
@@ -74,41 +62,27 @@ class GradientDescent(torch.nn.Module):
         return torch.cat([self.uncondition, cond])
 
     def forward(self):
-        score = 0
         ldm.embedding_2_img(ldm.get_embedding([prompt])[0], dim=dim, seed=seed, return_latents=True,
                             keep_init_latents=False)
 
         ldm.initial_latents = ldm.slerp(self.target_init_latents, ldm.initial_latents, self.val)
 
-        latents = ldm.embedding_2_img(self.get_text_embedding(), dim=dim,
+
+
+        latents = ldm.embedding_2_img(self.get_text_embedding(),  dim=dim,
                                       return_pil=False,
                                       return_latents=True, keep_init_latents=True)
 
-        score = compute_dist_metric(self.target_latents, latents) + score
+        score = compute_dist_metric(self.target_latents, latents)
 
         return score
 
-    def get_optimizer(self, eta, optim='SGD'):
-
-        if optim == 'SGD':
-            return torch.optim.SGD(
-                self.parameters(),
-                lr=eta,
-                momentum=0.95,
-                nesterov=True
-            )
-        elif optim == 'AdamTorch':
-            return torch.optim.Adam(
-                self.parameters(),
-                lr=eta
-                # eps=0.00000001
-            )
-        else:
-            return AdamOnLion(
-                params=self.parameters(),
-                lr=eta,
-                eps=0.001,
-            )
+    def get_optimizer(self, eta):
+        return AdamOnLion(
+            params=self.parameters(),
+            lr=eta,
+            eps=0.001,
+        )
 
 
 if __name__ == '__main__':
@@ -123,9 +97,11 @@ if __name__ == '__main__':
 
 
 
-    for eta in [0.1, 0.01]:
-        os.makedirs(f'./output/interpolation/{eta}')
+    for eta in [0.1]:
+        os.makedirs(f'./output/universal_embeddings/interpolation/{eta}', exist_ok=True)
         val = 0.01
+
+
 
         gd = GradientDescent(
             ldm.text_enc([prompt]),
@@ -135,12 +111,10 @@ if __name__ == '__main__':
             val
         )
 
-        optimizer = gd.get_optimizer(eta, 'AdamOnLion')
+        optimizer = gd.get_optimizer(eta)
 
         interpolation_value = [-5.]
         values = []
-        cnt = 0
-        batch_cnt = 0
 
         for i in range(100):
             optimizer.zero_grad()
@@ -156,9 +130,16 @@ if __name__ == '__main__':
             print(val)
             gd.val = val
 
+            #pil_img = ldm.embedding_2_img('', gd.get_text_embedding(), save_img=False,
+            #                                                            dim=dim, return_pil=True,
+            #                                                            return_latents=False,
+            #                              keep_init_latents=False,
+            #                              seed=seed)
+#
+            #pil_img.save(f'output/interpolation/{eta}/{dir_num}/A_{i}_{prompt[0:25]}_{round(score.item(), 3)}_{round(val, 2)}.jpg')
 #
 
-        plot_scores(interpolation_value, f'output/interpolation/{eta}/interpolation_values.jpg',
+        plot_scores(interpolation_value, f'output/universal_embeddings/interpolation/{eta}/interpolation_values.jpg',
                     x_label='Iterations',
                     y_label='alpha')
         plt.clf()
