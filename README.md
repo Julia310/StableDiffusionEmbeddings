@@ -23,7 +23,7 @@ to
 - `LAION-Aesthetic-V2-prompts.txt`: Prompts utilized for Figure 8.
 
 ## Section 3.1: Metric-Based Optimization
-To begin, download the aesthetic predictor model weights from the repository of its creators: https://github.com/christophschuhmann/improved-aesthetic-predictor/raw/fe88a163f4661b4ddabba0751ff645e2e620746e/sac%2Blogos%2Bava1-l14-linearMSE.pth and place the file under `./aesthetic_predictor/sac+logos+ava1-l14-linearMSE.pth` predictor weights.
+To begin, download the aesthetic predictor model weights from the repository of its creators: https://github.com/christophschuhmann/improved-aesthetic-predictor/raw/fe88a163f4661b4ddabba0751ff645e2e620746e/sac%2Blogos%2Bava1-l14-linearMSE.pth and place the file under `./aesthetic_predictor/sac+logos+ava1-l14-linearMSE.pth`.
 
 - **Source Code:** Find the code in:
   - `./metric_based_optimization/utils/aesthetic_metric_generalization.py` (Figure 9)
