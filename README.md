@@ -19,7 +19,7 @@ to
 ## Section 2.4: Prompt Datasets
 - Prompt list can be found in `./metric_based_optimization/datasets`.
 - `prompts.txt`: 
-  - A selection of 150 prompts from the diffusiondb: [Link](https://huggingface.co/datasets/poloclub/diffusiondb)
+  - A selection of 150 prompts from the diffusiondb: [Link](https://huggingface.co/datasets/poloclub/diffusiSondb)
   - Selected subsets: `large_random_100k`, `large_random_1k`
   - Used for evaluating metric optimization.
 - `LAION-Aesthetic-V2-prompts.txt`: Prompts utilized for Figure 8.
@@ -40,7 +40,7 @@ To begin, run the download script for aesthetic predictor weights.
 ## Figure 5: Images with Varying Seeds
 - **Prompt:** `Single Color Ball`
 - **Seeds:** 683395, 417016, 23916, 871288, 383124
-- **Instructions:** To execute, run ...
+- **Instructions:** To execute, run `python3 ./seed_invariant_embeddings/utils/generate_images_with_varying_seeds.py`
 
 ## Figure 6: Traversing the Prompt Embedding Space
 - **Execution:** Use `python3 ./seed_invariant_embeddings/prompt_embedding_space_traversal.py`
