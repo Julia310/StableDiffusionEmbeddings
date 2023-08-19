@@ -12,8 +12,3 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the packages to the container
 COPY . /workspace/
-
-# Default command to run the script
-#CMD ["python3", "scripts/prompt_embedding_space_traversal.py"]
-#docker exec -it $CONTAINER_ID /bin/bash
-#docker run -it --entrypoint=/bin/bash $IMAGE -i
