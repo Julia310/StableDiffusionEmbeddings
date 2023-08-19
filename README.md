@@ -12,12 +12,12 @@ to
 
 - **Seed:** 824331
 - **Execution:** Run using `python3 ./interpolation/embedding_interpolation.py`
-- **Output:** Images can be found at `./output/beautiful mount_a beautiful an/`.
+- **Output:** Images can be found at `/output/beautiful mount_a beautiful an/`.
 
 ## Section 2.4: Prompt Datasets
 - Prompt list can be found in `./metric_based_optimization/datasets`.
 - `prompts.txt`: 
-  - A selection of 150 prompts from the diffusiondb: [Available on huggingface](https://huggingface.co/datasets/poloclub/diffusiondb)
+  - A selection of 150 prompts from the diffusiondb: [Link](https://huggingface.co/datasets/poloclub/diffusiSondb)
   - Selected subsets: `large_random_100k`, `large_random_1k`
   - Used for evaluating metric optimization.
 - `LAION-Aesthetic-V2-prompts.txt`: Prompts utilized for Figure 8.
