@@ -129,12 +129,12 @@ def condition_to_image(path):
     embedding = torch.cat([uncond, condition])
     pil_img = ldm.embedding_2_img('', embedding, dim=dim, seed=1332, return_pil=True, keep_init_latents=False)
     pil_img.save(
-        f'output/image_recreated.jpg')
+        f'output/metric_generalization/highly detailed photoreal eldritch biomechani.jpg')
 
 
 embeddings_to_images()
 
-base_directory = './output/metric_generalization/a beautiful painting of a peaceful lake in th'
+base_directory = './output/metric_generalization/highly detailed photoreal eldritch biomechani'
 create_confidence_interval_plot(base_directory)
 
 
