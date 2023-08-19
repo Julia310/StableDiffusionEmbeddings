@@ -32,7 +32,7 @@ To begin, download the aesthetic predictor model weights from the repository of 
 - **Examples:** Refer to Figures 7, 8, and 9.
 
 ## Section 3.2: Iterative Human Feedback
-- **User Interface:** The interface is showcased in Figure 4. Run with `python3 ./iterative_human_feedback/userinteraction.py`
+- **User Interface:** The interface is showcased in Figure 4. Run with `python3 ./iterative_human_feedback/user_interaction.py`
 - **Results:** See Figure 10.
 
 ## Figure 5: Images with Varying Seeds
@@ -60,9 +60,9 @@ To begin, download the aesthetic predictor model weights from the repository of 
 - **Output:** `./output/metric_generalization/highly detailed photoreal eldritch biomechani/`
 
 ## Section 4.2: Advanced Iterative Human Feedback
-- **Prompt Engineering UI:** Launch the user interface for the prompt engineering reference method with ...
-- **Seed-Invariance Software:** Access the software for seed-invariance testing at ...
-- **User Study Questionnaires:** View the questionnaires for our user study ...
+- **Prompt Engineering UI:** Launch the user interface for the prompt engineering reference method with `python3 ./iterative_human_feedback/utils/prompt_engineering.py` (see above for how to run our proposed method)
+- **Seed-Invariance Software:** The software to generate the images with the given prompt embedding files can be found in `./iterative_human_feedback/utils/embeddings_to_image.py` (note that the parameter which prompt embedding input to use must be adjusted inside the file)
+- **User Study Questionnaires:** View the questionnaires for our user study in `./user_study`.
 
 ## Figure 10: User Study Image Showcase
 - **Resources:** Find images and prompt embeddings for this study in `./user_study`.
