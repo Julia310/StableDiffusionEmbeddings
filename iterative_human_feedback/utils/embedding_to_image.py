@@ -49,7 +49,7 @@ def cond2img(input_file, output_dir):
         filename = f'{os.path.basename(input_file).split("_")[0]}_{seed}.jpg'
         pil_img.save(os.path.join(output_dir, filename))
 
-input_file = "/mnt/ceph/storage/data-tmp/current/deckersn/stablediffusionembeddings-deployment-ui-output/3_scary and horror old house/results/cond_binary/17_tensor.pt"
+input_file = "./stablediffusionembeddings-deployment-ui-output/3_scary and horror old house/results/cond_binary/17_tensor.pt"
 
-output_dir = '/mnt/ceph/storage/data-tmp/current/wd83zadi/output/UI/results'
+output_dir = './output/UI/results'
 cond2img(input_file, output_dir)
