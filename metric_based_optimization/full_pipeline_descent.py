@@ -182,15 +182,26 @@ def get_image(seed, iterations, prompt, metric):
     pil_image.save(f'output/metric_optimization/{metric}/{prompt[0:45].strip()}/{prompt[0:45].strip()}_{round(optimized_score, 4)}.jpg')
 
 
-if __name__ == '__main__':
+def increase_blurriness():
     prompt = "a coffee cup filled with magma, digital art, highly detailed, sparks in the background, out of focus background"
-    #get_image(61582, 7, prompt, "Sharpness")
-    #get_image(61582, 7, prompt, "Blurriness")
+    get_image(61582, 7, prompt, "Blurriness")
 
 
+def increase_sharpness():
+    prompt = "a coffee cup filled with magma, digital art, highly detailed, sparks in the background, out of focus background"
+    get_image(61582, 7, prompt, "Sharpness")
+
+
+def increase_aesthetic_score():
     with open('./metric_based_optimization/dataset/LAION-Aesthetics-V2_prompts.txt', 'r', encoding='utf-8') as file:
         prompts = file.readlines()
         prompts = [line.strip() for line in prompts]  # Remove leading/trailing whitespace and newlines
     for prompt in prompts:
         get_image(61582, 7, prompt, "LAION-Aesthetics V2")
+
+
+if __name__ == '__main__':
+    #increase_sharpness()
+    #increase_blurriness()
+    increase_aesthetic_score()
 
