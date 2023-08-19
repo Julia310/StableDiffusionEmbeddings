@@ -49,7 +49,6 @@ def cond2img(input_file, output_dir):
         filename = f'{os.path.basename(input_file).split("_")[0]}_{seed}.jpg'
         pil_img.save(os.path.join(output_dir, filename))
 
-input_file = "./stablediffusionembeddings-deployment-ui-output/3_scary and horror old house/results/cond_binary/17_tensor.pt"
-
-output_dir = './output/UI/results'
+input_file = "1_tensor.pt" #please adjust
+output_dir = './output/results'#please adjust
 cond2img(input_file, output_dir)
