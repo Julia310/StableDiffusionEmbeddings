@@ -179,7 +179,7 @@ class StableDiffusion:
             latents = latents.to(self.device).float() * self.scheduler.init_noise_sigma
         else:
             latents = latents.to(self.device).half() * self.scheduler.init_noise_sigma
-            #latents = latents.to(self.device).float() * self.scheduler.init_noise_sigma
+            #latents = latents.to(self.device).float() * self.scheduler.init_noise_sigmaa coffee cup filled with magma, digital art,\0.98_0_a coffee cup filled with magma, digital art,_5.125.jpg"
 
 
         # Iterating through defined steps
@@ -200,11 +200,11 @@ class StableDiffusion:
             # Conditioning  the latents
             latents = self.scheduler.step(pred, ts, latents).prev_sample
 
-        if not return_pil: return latents
+        #if not return_pil: return latents
 
-        pil_image = self.latents_to_image(latents)[0]
+            pil_image = self.latents_to_image(latents)[0]
 
-        # Saving image
-        if save_img:
-            pil_image.save(f'output/{prompt[0:45]}.jpg')
+            # Saving image
+            if save_img:
+                pil_image.save(f'output/{i}_{prompt[0:45]}.jpg')
         return pil_image
