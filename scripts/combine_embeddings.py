@@ -1,4 +1,8 @@
 from ldm.stable_diffusion import StableDiffusion
+import torch
+seed2 = 1332
+
+dim = 512
 
 
 def main():
