@@ -154,7 +154,8 @@ if __name__ == '__main__':
     #compare_images(r'D:\StableDiffusionEmbeddings\output\evaluation2\additional_images\An otherworldly landscape with floating islan\image1')
     #compare_images(r'D:\StableDiffusionEmbeddings\output\evaluation2\aesthetic_pred\images\_giant nordic hell dragon attacking a victoria\image')
     #compare_images(r'D:\StableDiffusionEmbeddings\output\evaluation2\aesthetic_pred\images\magnificent forts of indian temples surrounde\image')
-    #ompare_images(r'D:\StableDiffusionEmbeddings\output\evaluation2\aesthetic_pred\images\_pencil drawing of a rubber ducky in the style\image')
+    #compare_images(r'D:\StableDiffusionEmbeddings\output\evaluation2\aesthetic_pred\images\_pencil drawing of a rubber ducky in the style\image')
+    compare_images(r'D:\StableDiffusionEmbeddings\output\evaluation2\aesthetic_pred\images\_mossarium\image')
 
     #print(find_duplicate_score(r'D:\StableDiffusionEmbeddings\output\evaluation2\sharpness\images\render of a large purple panther at night roa\image1'))
     #print(find_best_image(r'D:\StableDiffusionEmbeddings\output\evaluation2\sharpness\images\render of a large purple panther at night roa\image1', 8))
@@ -162,5 +163,5 @@ if __name__ == '__main__':
     #find_improved_image(r'D:\StableDiffusionEmbeddings\output\evaluation2\aesthetic_pred\images')
     #find_improved_image(r'D:\StableDiffusionEmbeddings\output\evaluation2\sharpness\images')
     #find_improved_image(r'D:\StableDiffusionEmbeddings\output\evaluation2\additional_images')
-    find_improved_image(r'D:\StableDiffusionEmbeddings\output\evaluation2\sharpness\images')
+    #find_improved_image(r'D:\StableDiffusionEmbeddings\output\evaluation2\sharpness\images')
 
