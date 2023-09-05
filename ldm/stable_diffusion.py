@@ -158,7 +158,7 @@ class StableDiffusion:
         return res
 
 
-    def embedding_2_img(self, prompt, emb, keep_init_latents=True, return_pil=True, dim=512, g=7.5, seed=61582, steps=70, save_img=True):
+    def embedding_2_img(self, emb, keep_init_latents=True, return_pil=True, dim=512, g=7.5, seed=61582, steps=70):
         """
         Diffusion process to convert input to image
         """
@@ -179,7 +179,7 @@ class StableDiffusion:
             latents = latents.to(self.device).float() * self.scheduler.init_noise_sigma
         else:
             latents = latents.to(self.device).half() * self.scheduler.init_noise_sigma
-            #latents = latents.to(self.device).float() * self.scheduler.init_noise_sigmaa coffee cup filled with magma, digital art,\0.98_0_a coffee cup filled with magma, digital art,_5.125.jpg"
+            #latents = latents.to(self.device).float() * self.scheduler.init_noise_sigma
 
 
         # Iterating through defined steps
@@ -199,12 +199,13 @@ class StableDiffusion:
 
             # Conditioning  the latents
             latents = self.scheduler.step(pred, ts, latents).prev_sample
+            if i == steps - 1 and not return_pil:
+                if not return_pil: return latents
 
-        #if not return_pil: return latents
-
+        if return_pil:
             pil_image = self.latents_to_image(latents)[0]
 
             # Saving image
-            if save_img:
-                pil_image.save(f'output/{i}_{prompt[0:45]}.jpg')
+            #if save_img:
+            #    pil_image.save(f'output/{i}_{prompt[0:45]}.jpg')
         return pil_image
