@@ -4,20 +4,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import shutil
 import glob
+import numpy as np
 
 
-def extract_indexed_elements(directory_path):
+def extract_indexed_elements(directory_path, max_idx=500):
     # Initialize a list to store the numbers
     numbers_list = []
 
     index_0_list = []
     index_24_list = []
     index_49_list = []
+    index_99_list = []
+    index_199_list = []
+    index_299_list = []
+    index_499_list = []
 
-    #index_99_list = []
-    #index_199_list = []
-    #index_299_list = []
-    #index_499_list = []
     # Iterate through each subdirectory
     for dir_name in os.listdir(directory_path):
         subdir_path = os.path.join(directory_path, dir_name)
@@ -33,23 +34,30 @@ def extract_indexed_elements(directory_path):
                         lines = [float(num) for num in lines]
                         numbers_list.append(lines)
 
-                        index_0_list.append(lines[0])
-                        index_24_list.append(lines[24])
-                        index_49_list.append(lines[49])
-
-                        #index_99_list.append(lines[99])
-                        #index_199_list.append(lines[199])
-                        #index_299_list.append(lines[299])
-                        #index_499_list.append(lines[499])
-    #return index_0_list, index_99_list, index_199_list, index_299_list, index_499_list
-    #index_0_list = [x // 10 for x in index_0_list]
-    #index_24_list = [x // 10 for x in index_24_list]
-    #index_49_list = [x // 10 for x in index_49_list]
+                        if max_idx == 500:
+                            index_0_list.append(lines[0])
+                            index_99_list.append(lines[99])
+                            index_199_list.append(lines[199])
+                            index_299_list.append(lines[299])
+                            index_499_list.append(lines[499])
+                        else:
+                            index_0_list.append(lines[0])
+                            index_24_list.append(lines[24])
+                            index_49_list.append(lines[49])
+    if max_idx == 500:
+        return index_0_list, index_99_list, index_199_list, index_299_list, index_499_list
+        #index_0_list = [x // 10 for x in index_0_list]
+        #index_24_list = [x // 10 for x in index_24_list]
+        #index_49_list = [x // 10 for x in index_49_list]
 
     return index_0_list, index_24_list, index_49_list
 
 
-def get_score_delta(directory_path):
+import os
+import matplotlib.pyplot as plt
+
+
+def get_score_delta(directory_path, y_label='aesthetic score delta', return_delta=True):
     # Initialize a list to store the numbers
     numbers_list = []
 
@@ -64,21 +72,28 @@ def get_score_delta(directory_path):
                     with open(file_path, 'r') as f:
                         lines = f.readlines()
                         lines = [line.strip() for line in lines]  # Remove leading/trailing whitespace and newlines
-                        #lines = list(set(lines))
                         lines = [float(num) for num in lines]
+                        #numbers_list.append(lines[0] - min(lines) )
                         numbers_list.append(max(lines) - lines[0])
-    print(numbers_list)
-    #numbers_list = [x // 10 for x in numbers_list]
-    print(numbers_list)
-    fig, ax = plt.subplots()
-    ax.boxplot(numbers_list)
 
-    # Add labels and title
-    #ax.set_xlabel('Data')
-    ax.set_ylabel('Score Delta')
-    ax.set_title('Score Delta Boxplot')
-    plt.savefig(f'./output/score_increase.png')
+    if return_delta:
+        return numbers_list
 
+    #fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(4, 6))  # Change the '4' to your desired width in inches
+    ax.boxplot(numbers_list, widths=0.3)
+
+    # Add labels
+    #ax.set_ylabel(y_label)
+    ax.set_xlabel(y_label)
+
+    # Remove y-axis numbers
+    ax.set_xticks([])
+
+    # Adjust left margin
+    #fig.subplots_adjust(left=0.2)  # Adjust '0.25' as needed
+
+    plt.savefig(f'./output/{y_label.replace(" ", "_")}.png')
 
 
 def get_best_image(directory_path):
@@ -157,14 +172,96 @@ def plot_images(directory_path, window_size=15):
         plt.close(fig)
 
 
+def compute_statistics(data):
+    data = np.array(data)  # Convert data to a numpy array
+    # Compute the median
+    median = np.median(data)
 
+    # Compute the quantiles
+    q1 = np.percentile(data, 25)  # 25th percentile
+    q3 = np.percentile(data, 75)  # 75th percentile
+
+    # Compute the IQR (Interquartile Range)
+    iqr = q3 - q1
+
+    # Determine the lower and upper whiskers
+    lower_whisker = np.min(data[data >= q1 - 1.5 * iqr])
+    upper_whisker = np.max(data[data <= q3 + 1.5 * iqr])
+
+    return q1, median, q3, lower_whisker, upper_whisker
 
 
 if __name__ == '__main__':
     directory_path = r"./output/evaluation2/aesthetic_pred/images"
-    #directory_path = r"./output/evaluation2/sharpness/images"
+    metric_delta = get_score_delta(directory_path)
+    delta_labels = ['aesthetic delta']
 
-    #index_0_list, index_99_list, index_199_list, index_299_list, index_499_list = extract_indexed_elements(directory_path)
+    index_0_list, index_99_list, index_199_list, index_299_list, index_499_list = extract_indexed_elements(directory_path)
+    data = [index_0_list, index_99_list, index_199_list, index_299_list, index_499_list]
+    labels = ['0', '99', '199', '299', '499']
+    #create_boxplots(data, labels, x_label='iterations', y_label='aesthetic score')
+    #create_boxplots(data, labels, metric_delta, delta_labels, x_label='iterations', y_label='aesthetic score')
+    create_boxplots(data, labels, x_label='iterations', y_label='aesthetic score')
+    for i in range(len(labels)):
+        print(labels[i])
+        q1, median, q3, lower_whisker, upper_whisker = compute_statistics(data[i])
+
+        print(f"1st Quartile (Q1): {q1}")
+        print(f"Median: {median}")
+        print(f"3rd Quartile (Q3): {q3}")
+        print(f"Lower Whisker (without outliers): {lower_whisker}")
+        print(f"Upper Whisker (without outliers): {upper_whisker}")
+
+
+    delta_labels = ['sharpness delta']
+    labels = ['0', '24', '49']
+    directory_path = r"./output/evaluation2/sharpness/images"
+    metric_delta = get_score_delta(directory_path, y_label='sharpness delta')
+    index_0_list, index_24_list, index_49_list = extract_indexed_elements(directory_path, max_idx=50)
+    index_0_list = [x / 10 for x in index_0_list]
+    index_24_list = [x / 10 for x in index_24_list]
+    index_49_list = [x / 10 for x in index_49_list]
+    #metric_delta = [x // 10 for x in metric_delta]
+    data = [index_0_list, index_24_list, index_49_list]
+    labels = ['0', '24', '49']
+    #create_boxplots(data, labels, metric_delta, delta_labels, x_label='iterations', y_label='sharpness x 10')
+    create_boxplots(data, labels, x_label='iterations', y_label='sharpness')
+    for i in range(len(labels)):
+        print(labels[i])
+        q1, median, q3, lower_whisker, upper_whisker = compute_statistics(data[i])
+
+        print(f"1st Quartile (Q1): {q1}")
+        print(f"Median: {median}")
+        print(f"3rd Quartile (Q3): {q3}")
+        print(f"Lower Whisker (without outliers): {lower_whisker}")
+        print(f"Upper Whisker (without outliers): {upper_whisker}")
+
+    delta_labels = ['blurriness delta']
+    directory_path = r"./output/evaluation2/blurriness/images"
+    metric_delta = get_score_delta(directory_path, y_label='blurriness delta')
+    index_0_list, index_24_list, index_49_list = extract_indexed_elements(directory_path, max_idx=50)
+    index_0_list = [x / 10 for x in index_0_list if (x / 10) <= 2]
+    print(len(index_0_list))
+    index_24_list = [x / 10 for x in index_24_list]
+    index_49_list = [x / 10 for x in index_49_list]
+    #metric_delta = [x // 10 for x in metric_delta]
+    maximum = max(index_0_list)
+    data = [index_0_list, index_24_list, index_49_list]
+    labels = ['0', '24', '49']
+    # create_boxplots(data, labels, metric_delta, delta_labels, x_label='iterations', y_label='blurriness x 10')
+    create_boxplots(data, labels, x_label='iterations', y_label='blurriness')
+    for i in range(len(labels)):
+        print(labels[i])
+        q1, median, q3, lower_whisker, upper_whisker = compute_statistics(data[i])
+
+        print(f"1st Quartile (Q1): {q1}")
+        print(f"Median: {median}")
+        print(f"3rd Quartile (Q3): {q3}")
+        print(f"Lower Whisker (without outliers): {lower_whisker}")
+        print(f"Upper Whisker (without outliers): {upper_whisker}")
+
+
+
     #index_0_list, index_24_list, index_49_list = extract_indexed_elements(directory_path)
 
     #data = [index_0_list, index_99_list, index_199_list, index_299_list, index_499_list]
@@ -176,9 +273,8 @@ if __name__ == '__main__':
 
     #get_best_image(directory_path)
     #plot_images(directory_path)
-    #get_score_delta(directory_path)
 
-    plot_images(directory_path)
+    #plot_images(directory_path)
 
     #print("Means for each position:")
     #print(result)
